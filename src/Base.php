@@ -103,12 +103,14 @@ abstract class Base
       $this->statementCache[$query->text] = $this->pdo()->prepare($query->text);
     }
     $s = $this->statementCache[$query->text];
-    foreach (array_values($query->params) as $i => $p) {
+    // note that bindParam() takes $variable as a reference
+    $params = array_values($query->params);
+    foreach ($params as $i => $p) {
       if ($p instanceof QueryParam) {
-        $s->bindParam($i + 1, $p->value, $p->type);
+        $s->bindParam($i + 1, $params[$i]->value, $p->type);
       }
       else {
-        $s->bindParam($i + 1, $p, \PDO::PARAM_STR);
+        $s->bindParam($i + 1, $params[$i], \PDO::PARAM_STR);
       }
     }
     $s->execute();

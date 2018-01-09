@@ -79,20 +79,20 @@ abstract class Base
 
   public function savepoint($name)
   {
-    $name = $this->makeNameClause($name);
-    $this->pdo()->exec("savepoint $name->text");
+    $name = $this->quoteName($name);
+    $this->pdo()->exec("savepoint $name");
   }
 
   public function releaseSavepoint($name)
   {
-    $name = $this->makeNameClause($name);
-    $this->pdo()->exec("release savepoint $name->text");
+    $name = $this->quoteName($name);
+    $this->pdo()->exec("release savepoint $name");
   }
 
   public function rollbackTo($name)
   {
-    $name = $this->makeNameClause($name);
-    $this->pdo()->exec("rollback to savepoint $name->text");
+    $name = $this->quoteName($name);
+    $this->pdo()->exec("rollback to savepoint $name");
   }
 
   public function execute($query)
@@ -292,11 +292,24 @@ abstract class Base
       ->append($this->makeOnClause(@$join["where"]));
   }
 
+  /**
+   * @param string $name
+   * @return Query
+   */
   public function makeNameClause($name)
   {
+    return new Query($this->quoteName($name));
+  }
+
+  /**
+   * @param string $name
+   * @return string
+   */
+  public function quoteName($name)
+  {
     $name = trim($name);
-    if (trim($name) == "") {
-      return new Query();
+    if ($name == "") {
+      return $name;
     }
     $parts = explode(".", $name);
     $parts = array_map(function($i) {
@@ -311,7 +324,7 @@ abstract class Base
       }
       return '"' . $i . '"';
     }, $parts);
-    return Query::join($parts, ".");
+    return join(".", $parts);
   }
   
   public function makeWhereClause($conditions)
@@ -332,6 +345,10 @@ abstract class Base
     return (new Query("on"))->append($q);
   }
   
+  /**
+   * @param array|Query|string $where
+   * @return Query
+   */
   public function makeConditionClause($where)
   {
     if ($where instanceof Query) {

@@ -3,9 +3,16 @@ namespace Coroq\Db;
 
 class Query
 {
+  /** @var string */
   public $text;
+
+  /** @var array */
   public $params;
   
+  /**
+   * @param Query|string $text
+   * @param array $params
+   */
   public function __construct($text = "", array $params = [])
   {
     // copy
@@ -22,11 +29,19 @@ class Query
     $this->params = array_values($params);
   }
 
+  /**
+   * @return bool
+   */
   public function isEmpty()
   {
     return $this->text == "";
   }
 
+  /**
+   * @param Query|string $x
+   * @param string $glue
+   * @return Query
+   */
   public function append($x, $glue = " ")
   {
     $x = new Query($x);
@@ -52,6 +67,9 @@ class Query
     return $this->append($x, " or ");
   }
 
+  /**
+   * @return Query
+   */
   public function paren()
   {
     if ($this->isEmpty()) {
@@ -63,6 +81,11 @@ class Query
     );
   }
 
+  /**
+   * @param array $x
+   * @param string $glue
+   * @return Query
+   */
   public static function join(array $queries, $glue = " ")
   {
     if (!$queries) {
@@ -75,6 +98,10 @@ class Query
     return $joined;
   }
   
+  /**
+   * @param array $items
+   * @return Query
+   */
   public static function toList(array $items)
   {
     return static::join($items, ", ");

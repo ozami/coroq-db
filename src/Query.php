@@ -1,5 +1,5 @@
 <?php
-use Coroq\Db;
+namespace Coroq\Db;
 
 class Query
 {

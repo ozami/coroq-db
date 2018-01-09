@@ -379,7 +379,7 @@ abstract class Base
       return !$x->isEmpty();
     });
     if (!$where) {
-      return null;
+      return new Query();
     }
     return Query::join($where, " and ");
   }

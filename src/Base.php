@@ -154,25 +154,6 @@ abstract class Base
     }
   }
   
-  public function quoteName($name)
-  {
-    $name = trim($name);
-    if (!preg_match("/^[A-Za-z0-9_.*]+$/u", $name)) {
-      throw new \LogicException();
-    }
-    $parts = explode(".", $name);
-    $parts = array_map(function($i) {
-      if ($i == "*") {
-        return $i;
-      }
-      if (strpos($i, "*") !== false) {
-        throw new \LogicException();
-      }
-      return '"' . $i . '"';
-    }, $parts);
-    return join(".", $parts);
-  }
-  
   public function select(array $query)
   {
     return $this->query(
@@ -183,23 +164,17 @@ abstract class Base
   
   public function insert(array $query)
   {
-    return $this->execute(
-      $this->makeInsertStatement($query)
-    );
+    return $this->execute($this->makeInsertStatement($query));
   }
   
   public function update(array $query)
   {
-    return $this->execute(
-      $this->makeUpdateStatement($query)
-    );
+    return $this->execute($this->makeUpdateStatement($query));
   }
   
   public function delete(array $query)
   {
-    return $this->execute(
-      $this->makeDeleteStatement($query)
-    );
+    return $this->execute($this->makeDeleteStatement($query));
   }
   
   public function makeSelectStatement(array $query)
@@ -228,7 +203,7 @@ abstract class Base
   public function makeUpdateStatement(array $query)
   {
     return (new Query("update"))
-      ->append($this->makeTableClause(@$query["table"]))
+      ->append($this->makeNameClause(@$query["table"]))
       ->append($this->makeSetClause(@$query["data"]))
       ->append($this->makeWhereClause(@$query["where"]));
   }
@@ -250,9 +225,10 @@ abstract class Base
         return new Query($col);
       }
       if (preg_match("/^(count|sum|avg|min|max)\\((.+)\\)$/u", $col, $match)) {
-        return new Query("$match[1]({$this->quoteName($match[2])})");
+        $name = $this->makeNameClause($match[2])->paren();
+        return (new Query($match[1]))->append($name, "");
       }
-      return new Query($this->quoteName($col));
+      return $this->makeNameClause($col);
     }, (array)$column);
     $column = array_filter($column, function($col) {
       return !$col->isEmpty();
@@ -260,55 +236,39 @@ abstract class Base
     return Query::toList($column);
   }
   
-  public function makeFromClause($from)
+  public function makeFromClause($name)
   {
-    if (!$from instanceof Query) {
-    }
-    else {
-      $from = trim($from);
-      if ($from == "") {
-        return null;
-      }
-      $from = $this->makeNameClause($from);
-    }
-    if (!$from->isEmpty()) {
-      return $from;
-    }
-    return (new Query("from"))->append($from);
+    return $this->makePrefixedNameClauseHelper("from", $name);
   }
   
-  public function makeAliasClause($alias)
+  public function makeAliasClause($name)
   {
-    if ($alias instanceof Query) {
-      if ($alias->isEmpty()) {
-        return null;
-      }
-    }
-    else {
-      $alias = trim($alias);
-      if ($alias == "") {
-        return null;
-      }
-      $alias = $this->makeNameClause($alias);
-    }
-    return (new Query("as"))->append($alias);
+    return $this->makePrefixedNameClauseHelper("as", $name);
   }
   
-  public function makeIntoClause($into)
+  public function makeIntoClause($name)
   {
-    
+    return $this->makePrefixedNameClauseHelper("into", $name);
+  }
+  
+  public function makePrefixedNameClauseHelper($prefix, $name)
+  {
+    if (!($name instanceof Query)) {
+      $name = $this->makeNameClause($name);
+    }
+    if ($name->isEmpty()) {
+      return $name;
+    }
+    return (new Query($prefix))->append($name);
   }
 
   public function makeJoinClause($join)
   {
     if ($join instanceof Query) {
-      if ($join->isEmpty()) {
-        return null;
-      }
       return $join;
     }
     if (!$join) {
-      return null;
+      return new Query();
     }
     // multiple join clauses
     if (ctype_digit(join("", array_keys($join)))) {
@@ -334,31 +294,42 @@ abstract class Base
 
   public function makeNameClause($name)
   {
-    if ($name instanceof Query) {
-      return $name;
-    }
+    $name = trim($name);
     if (trim($name) == "") {
       return new Query();
     }
-    return new Query($this->quoteName($name));
+    $parts = explode(".", $name);
+    $parts = array_map(function($i) {
+      if ($i == "*") {
+        return $i;
+      }
+      if ($i == "") {
+        throw new \LogicException();
+      }
+      if (!preg_match("#^[A-Za-z0-9_]+$#u", $name)) {
+        throw new \LogicException();
+      }
+      return '"' . $i . '"';
+    }, $parts);
+    return Query::join($parts, ".");
   }
   
   public function makeWhereClause($conditions)
   {
     $q = $this->makeConditionClause($conditions);
-    if ($q) {
-      $q = (new Query("where"))->append($q);
+    if ($q->isEmpty()) {
+      return $q;
     }
-    return $q;
+    return (new Query("where"))->append($q);
   }
   
   public function makeOnClause($conditions)
   {
     $q = $this->makeConditionClause($conditions);
-    if ($q) {
-      $q = (new Query("on"))->append($q);
+    if ($q->isEmpty()) {
+      return $q;
     }
-    return $q;
+    return (new Query("on"))->append($q);
   }
   
   public function makeConditionClause($where)
@@ -378,7 +349,7 @@ abstract class Base
         throw new \LogicException();
       }
       @list (, $name, , , $operator) = $matched;
-      $name = $this->quoteName($name);
+      $name = $this->makeNameClause($name);
       if ($operator == "") {
         $operator = "eq";
       }
@@ -471,7 +442,7 @@ abstract class Base
     return (new Query("limit"))->append($limit);
   }
 
-  public function parseCondition($name, $op, $value)
+  public function parseCondition(Query $name, $op, $value)
   {
     // simple operators
     $simple_ops = [
@@ -481,10 +452,10 @@ abstract class Base
       "like" => "like", "!like" => "not like",
     ];
     if (isset($simple_ops[$op])) {
-      return new Query("$name {$simple_ops[$op]} ?", [$value]);
+      return $name->append(new Query("$simple_ops[$op] ?", [$value]));
     }
     if ($op == "null") {
-      return new Query("$name is " . ($value ? "": "not ") . "null");
+      return $name->append("is")->append($value ? "": "not")->append("null");
     }
     if ($op == "in" || $op == "!in") {
       $holders = join(", ",  array_fill(0, count($value), "?"));

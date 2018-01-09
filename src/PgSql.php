@@ -6,7 +6,7 @@ class PgSql extends Base
   public function getTableInfo($table)
   {
     $info = array();
-    $cols = self::select(new Db_Sql(
+    $cols = $this->select(new Db_Sql(
       "select a.attname, a.attnotnull, " .
       "(select a.attnum = any (conkey) from pg_constraint where conrelid = c.oid and contype = ?) as pk " .
       "from pg_attribute a " .

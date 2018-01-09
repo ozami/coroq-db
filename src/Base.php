@@ -306,7 +306,7 @@ abstract class Base
       if ($i == "") {
         throw new \LogicException();
       }
-      if (!preg_match("#^[A-Za-z0-9_]+$#u", $name)) {
+      if (!preg_match("#^[A-Za-z0-9_]+$#u", $i)) {
         throw new \LogicException();
       }
       return '"' . $i . '"';

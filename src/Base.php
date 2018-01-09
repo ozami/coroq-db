@@ -358,7 +358,7 @@ abstract class Base
       return new Query($where);
     }
     $where = array_map(function($value, $name) {
-      if ($name == (int)$name) {
+      if (ctype_digit($name)) {
         return $value;
       }
       $name = str_replace("::", ".", $name);

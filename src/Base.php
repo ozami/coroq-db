@@ -79,20 +79,20 @@ abstract class Base
 
   public function savepoint($name)
   {
-    $name = $this->quoteName($name);
-    $this->pdo()->exec("savepoint $name");
+    $name = $this->makeNameClause($name);
+    $this->pdo()->exec("savepoint $name->text");
   }
 
   public function releaseSavepoint($name)
   {
-    $name = $this->quoteName($name);
-    $this->pdo()->exec("release savepoint $name");
+    $name = $this->makeNameClause($name);
+    $this->pdo()->exec("release savepoint $name->text");
   }
 
   public function rollbackTo($name)
   {
-    $name = $this->quoteName($name);
-    $this->pdo()->exec("rollback to savepoint $name");
+    $name = $this->makeNameClause($name);
+    $this->pdo()->exec("rollback to savepoint $name->text");
   }
 
   public function execute($query)

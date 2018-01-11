@@ -263,6 +263,26 @@ abstract class Base
     }
     return (new Query($prefix))->append($name);
   }
+  
+  /**
+   * @param array|Query $data
+   * @return Query
+   */
+  public function makeValuesClause($data)
+  {
+    if ($data instanceof Query) {
+      return $data;
+    }
+    $names = [];
+    $values = [];
+    foreach ($data as $name => $value) {
+      $names[] = $this->makeNameClause($name);
+      $values[] = new Query("?", [$value]);
+    }
+    $names = Query::toList($names)->paren();
+    $values = Query::toList($values)->paren();
+    return $names->append("values")->append($values);
+  }
 
   public function makeJoinClause($join)
   {
@@ -490,6 +510,4 @@ abstract class Base
   {
     return $this->pdo()->lastInsertId($name);
   }
-  
-  public abstract function getTableInfo($table);
 }

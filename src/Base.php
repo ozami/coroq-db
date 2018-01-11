@@ -387,15 +387,16 @@ abstract class Base
         return $value;
       }
       $name = str_replace("::", ".", $name);
+      $matched = null;
       if (!preg_match("/^(([a-zA-Z0-9_]+[.])?[a-zA-Z0-9_]+)(:(!?[a-z_]+))?$/u", $name, $matched)) {
         throw new \LogicException();
       }
       @list (, $name, , , $operator) = $matched;
-      $name = $this->makeNameClause($name);
+      $name_clause = $this->makeNameClause($name);
       if ($operator == "") {
         $operator = "eq";
       }
-      return $this->parseCondition($name, $operator, $value);
+      return $this->parseCondition($name_clause, $operator, $value);
     }, $where, array_keys($where));
     $where = array_map(function($x) {
       return new Query($x);

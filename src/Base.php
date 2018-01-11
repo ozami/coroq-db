@@ -34,6 +34,9 @@ abstract class Base
     return $this->pdo;
   }
   
+  /**
+   * @return void
+   */
   public function connect()
   {
     $this->pdo = new \PDO($this->dsn, $this->user, $this->pw, $this->options);

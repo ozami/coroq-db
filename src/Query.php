@@ -82,7 +82,7 @@ class Query
   }
 
   /**
-   * @param array $x
+   * @param array $queries
    * @param string $glue
    * @return Query
    */

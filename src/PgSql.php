@@ -3,7 +3,13 @@ namespace Coroq\Db;
 
 class PgSql extends Base
 {
-  public function parseCondition($name, $op, $value)
+  /**
+   * @param Query $name
+   * @param string $op
+   * @param mixed $value
+   * @return Query
+   */
+  public function parseCondition(Query $name, $op, $value)
   {
     // simple operators
     $simple_ops = [
@@ -41,25 +47,18 @@ class PgSql extends Base
       if ($value instanceof Query) {
         $pattern->append("regexp_replace(");
         $pattern->append($value, "");
-        $pattern->append(", ?, ?)", ["([#%_])", "#\\1"]);
+        $pattern->append(new Query(", ?, ?)", ["([#%_])", "#\\1"]));
       }
       else {
         $pattern->append(new Query("?", [preg_replace("/([#%_])/u", "#$1", $value)]));
       }
       if ($op == "starts_with" || $op == "contains") {
-        $pattern->append(new Query("|| ?", "%"));
+        $pattern->append(new Query("|| ?", ["%"]));
       }
       $q->append($pattern->paren());
-      $q->append("escape ?", ["#"]);
+      $q->append(new Query("escape ?", ["#"]));
       return $q;
     }
     return parent::parseCondition($name, $op, $value);
-  }
-  
-  public function lastInsertId()
-  {
-    if (Db::getDriver() == "pgsql") {
-        $name = $this->_name . "_" . $this->getPk() . "_seq";
-    }
   }
 }

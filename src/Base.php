@@ -484,6 +484,12 @@ abstract class Base
     return (new Query("limit"))->append($limit);
   }
 
+  /**
+   * @param Query $name
+   * @param string $op
+   * @param mixed $value
+   * @return Query
+   */
   public function parseCondition(Query $name, $op, $value)
   {
     // simple operators

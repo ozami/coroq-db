@@ -287,6 +287,24 @@ abstract class Base
     return $names->append("values")->append($values);
   }
 
+  /**
+   * @param array|Query $data
+   * @return Query
+   */
+  public function makeSetClause($data)
+  {
+    if ($data instanceof Query) {
+      return $data;
+    }
+    $sets = [];
+    foreach ($data as $name => $value) {
+      $sets[] = $this->makeNameClause($name)
+        ->append("=")
+        ->append(new Query("?", [$value]));
+    }
+    return Query::toList($sets);
+  }
+
   public function makeJoinClause($join)
   {
     if ($join instanceof Query) {

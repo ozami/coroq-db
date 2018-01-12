@@ -34,4 +34,27 @@ class BaseTest extends PHPUnit_Framework_TestCase
       ])
     );
   }
+  
+  public function testMakeSetClauseCanHandleSingleElementArray()
+  {
+    $db = new TestDb();
+    $this->assertEquals(
+      new Query('"col1" = ?', [1]),
+      $db->makeSetClause([
+        "col1" => 1,
+      ])
+    );
+  }
+
+  public function testMakeSetClauseCanHandleMultipleElementsArray()
+  {
+    $db = new TestDb();
+    $this->assertEquals(
+      new Query('"col1" = ?, "col2" = ?', [1, "test"]),
+      $db->makeSetClause([
+        "col1" => 1,
+        "col2" => "test",
+      ])
+    );
+  }
 }

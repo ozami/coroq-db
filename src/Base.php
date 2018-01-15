@@ -97,7 +97,11 @@ abstract class Base
     $name = $this->quoteName($name);
     $this->pdo()->exec("rollback to savepoint $name");
   }
-
+  
+  /**
+   * @param Query|string $query
+   * @return \PDOStatement
+   */
   public function execute($query)
   {
     $query = new Query($query);
@@ -120,6 +124,11 @@ abstract class Base
     return $s;
   }
   
+  /**
+   * @param Query|string $query
+   * @param string $fetch
+   * @return mixed
+   */
   public function query($query, $fetch = self::FETCH_ALL)
   {
     $s = $this->execute($query);
@@ -142,7 +151,11 @@ abstract class Base
     }
     throw new \LogicException();
   }
-  
+
+  /**
+   * @param Query $query
+   * @return void
+   */
   public function checkSqlInjection(Query $query)
   {
     if (!preg_match("##u", $query->text)) {
@@ -158,7 +171,11 @@ abstract class Base
       throw new \LogicException();
     }
   }
-  
+
+  /**
+   * @param array $query
+   * @return mixed
+   */
   public function select(array $query)
   {
     return $this->query(
@@ -167,21 +184,37 @@ abstract class Base
     );
   }
   
+  /**
+   * @param array $query
+   * @return \PDOStatement
+   */
   public function insert(array $query)
   {
     return $this->execute($this->makeInsertStatement($query));
   }
   
+  /**
+   * @param array $query
+   * @return \PDOStatement
+   */
   public function update(array $query)
   {
     return $this->execute($this->makeUpdateStatement($query));
   }
   
+  /**
+   * @param array $query
+   * @return \PDOStatement
+   */
   public function delete(array $query)
   {
     return $this->execute($this->makeDeleteStatement($query));
   }
   
+  /**
+   * @param array $query
+   * @return Query
+   */
   public function makeSelectStatement(array $query)
   {
     $distinct = @$query["distinct"] ? "distinct" : null;
@@ -198,6 +231,10 @@ abstract class Base
       ->append($this->makeLimitClause(@$query["limit"]));
   }
   
+  /**
+   * @param array $query
+   * @return Query
+   */
   public function makeInsertStatement(array $query)
   {
     return (new Query("insert"))
@@ -205,6 +242,10 @@ abstract class Base
       ->append($this->makeValuesClause(@$query["data"]));
   }
   
+  /**
+   * @param array $query
+   * @return Query
+   */
   public function makeUpdateStatement(array $query)
   {
     return (new Query("update"))
@@ -213,6 +254,10 @@ abstract class Base
       ->append($this->makeWhereClause(@$query["where"]));
   }
 
+  /**
+   * @param array $query
+   * @return Query
+   */
   public function makeDeleteStatement(array $query)
   {
     return (new Query("delete"))
@@ -220,6 +265,10 @@ abstract class Base
       ->append($this->makeWhereClause(@$query["where"]));
   }
 
+  /**
+   * @param array|Query|string $column
+   * @return Query
+   */
   public function makeColumnClause($column)
   {
     $column = array_map(function($col) {
@@ -538,4 +587,4 @@ abstract class Base
   {
     return $this->pdo()->lastInsertId($name);
   }
-}
+  }

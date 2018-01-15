@@ -57,4 +57,40 @@ class BaseTest extends PHPUnit_Framework_TestCase
       ])
     );
   }
+  
+  public function testQuoteNameCanRejectInvalidCharacters()
+  {
+    $valids = array_merge(
+      [ // white spaces (will be trimmed)
+        0x00, // null
+        0x09, // tab
+        0x0a, // return
+        0x0b, // vertical tab
+        0x0d, // new line
+        0x20, // space
+      ],
+      [
+        0x2a, // asterisk
+        0x5f, // underscore
+      ],
+      range(0x30, 0x39), // digits
+      range(0x41, 0x5a), // upper alphabets
+      range(0x61, 0x7a)  // lower alphabets
+    );
+    $db = new TestDb();
+    for ($i = 0; $i <= 0xff; ++$i) {
+      try {
+        $db->quoteName(chr($i));
+        if (!in_array($i, $valids)) {
+          $this->fail();
+        }
+      }
+      catch (\Exception $e) {
+        if (in_array($i, $valids)) {
+          $this->fail();
+        }
+        $this->assertTrue($e instanceof \LogicException);
+      }
+    }
+  }
 }

@@ -140,12 +140,15 @@ abstract class Base
       return @$rows[0];
     }
     if ($fetch == self::FETCH_ONE) {
-      return @$rows[0][0];
+      if (!$rows) {
+        return null;
+      }
+      return current($rows[0]);
     }
     if ($fetch == self::FETCH_COL) {
       $col = [];
       foreach ($rows as $r) {
-        $col[] = @$r[0];
+        $col[] = current($r);
       }
       return $col;
     }

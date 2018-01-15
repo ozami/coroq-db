@@ -237,6 +237,12 @@ abstract class Base
    */
   public function makeInsertStatement(array $query)
   {
+    if (isset($query["column"])) {
+      if (!is_array(@$query["data"])) {
+        throw new \LogicException();
+      }
+      $query["data"] = $this->arrayPick($query["data"], $query["column"]);
+    }
     return (new Query("insert"))
       ->append($this->makeIntoClause(@$query["table"]))
       ->append($this->makeValuesClause(@$query["data"]));
@@ -248,6 +254,12 @@ abstract class Base
    */
   public function makeUpdateStatement(array $query)
   {
+    if (isset($query["column"])) {
+      if (!is_array(@$query["data"])) {
+        throw new \LogicException();
+      }
+      $query["data"] = $this->arrayPick($query["data"], $query["column"]);
+    }
     return (new Query("update"))
       ->append($this->makeNameClause(@$query["table"]))
       ->append($this->makeSetClause(@$query["data"]))
@@ -587,4 +599,14 @@ abstract class Base
   {
     return $this->pdo()->lastInsertId($name);
   }
+  
+  /**
+   * @param array $data
+   * @param array $keys
+   * @return array
+   */
+  public function arrayPick(array $data, array $keys)
+  {
+    return array_intersect_key($data, array_fill_keys($keys, null));
   }
+}

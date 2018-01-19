@@ -583,7 +583,9 @@ abstract class Base
       "like" => "like", "!like" => "not like",
     ];
     if (isset($simple_ops[$op])) {
-      return $name->append(new Query("$simple_ops[$op] ?", [$value]));
+      return $name
+        ->append($simple_ops[$op])
+        ->append(($value instanceof Query) ? $value : new Query("?", [$value]));
     }
     if ($op == "null") {
       return $name->append("is")->append($value ? "": "not")->append("null");

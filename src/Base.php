@@ -590,10 +590,10 @@ abstract class Base
     }
     if ($op == "in" || $op == "!in") {
       $holders = join(", ",  array_fill(0, count($value), "?"));
-      return new Query(
-        "$name " . ($op == "!in" ? "not ": "") . "in ($holders)",
-        $value
-      );
+      return $name
+        ->append($op == "!in" ? "not" : "")
+        ->append("in")
+        ->append((new Query($holders, $value))->paren());
     }
     throw new \LogicException();
   }

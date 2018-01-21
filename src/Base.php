@@ -366,7 +366,7 @@ abstract class Base
         ->append("=")
         ->append(new Query("?", [$value]));
     }
-    return Query::toList($sets);
+    return (new Query("set"))->append(Query::toList($sets));
   }
 
   public function makeJoinClause($join)

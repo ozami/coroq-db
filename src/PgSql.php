@@ -35,28 +35,32 @@ class PgSql extends Base
     if (in_array($op, $string_ops)) {
       $q = new Query($name);
       if ($op[0] == "!") {
-        $q->append("not");
+        $q = $q->append("not");
         $op = substr($op, 1);
       }
-      $q->append("ilike");
+      $q = $q->append("ilike");
       $pattern = new Query();
       if ($op == "ends_with" || $op == "contains") {
-        $pattern->append(new Query("? ||", ["%"]));
+        $pattern = $pattern->append(new Query("? ||", ["%"]));
       }
       // escape specials
       if ($value instanceof Query) {
-        $pattern->append("regexp_replace(");
-        $pattern->append($value, "");
-        $pattern->append(new Query(", ?, ?)", ["([#%_])", "#\\1"]));
+        $pattern = $pattern
+          ->append("regexp_replace(")
+          ->append($value, "")
+          ->append(new Query(", ?, ?)", ["([#%_])", "#\\1"]));
       }
       else {
-        $pattern->append(new Query("?", [preg_replace("/([#%_])/u", "#$1", $value)]));
+        $pattern = $pattern->append(
+          new Query("?", [preg_replace("/([#%_])/u", "#$1", $value)])
+        );
       }
       if ($op == "starts_with" || $op == "contains") {
-        $pattern->append(new Query("|| ?", ["%"]));
+        $pattern = $pattern->append(new Query("|| ?", ["%"]));
       }
-      $q->append($pattern->paren());
-      $q->append(new Query("escape ?", ["#"]));
+      $q = $q
+        ->append($pattern->paren())
+        ->append(new Query("escape ?", ["#"]));
       return $q;
     }
     return parent::parseCondition($name, $op, $value);

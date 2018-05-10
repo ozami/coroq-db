@@ -373,9 +373,12 @@ abstract class Db
     }
     $sets = [];
     foreach ($data as $name => $value) {
+      if (!($value instanceof Query)) {
+        $value = new Query("?", [$value]);
+      }
       $sets[] = $this->makeNameClause($name)
         ->append("=")
-        ->append(new Query("?", [$value]));
+        ->append($value);
     }
     return (new Query("set"))->append(Query::toList($sets));
   }

@@ -1,7 +1,9 @@
 <?php
-namespace Coroq\Db;
+namespace Coroq;
+use \Coroq\Db\Query;
+use \Coroq\Db\QueryParam;
 
-abstract class Base
+abstract class Db
 {
   const FETCH_ALL = "all";
   const FETCH_ROW = "row";

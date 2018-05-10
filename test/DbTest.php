@@ -1,8 +1,8 @@
 <?php
-use Coroq\Db\Base;
-use Coroq\Db\Query;
+use \Coroq\Db;
+use \Coroq\Db\Query;
 
-class TestDb extends Base
+class TestDb extends Db
 {
   public function __construct() 
   {
@@ -10,7 +10,7 @@ class TestDb extends Base
   }
 }
 
-class BaseTest extends PHPUnit_Framework_TestCase
+class DbTest extends PHPUnit_Framework_TestCase
 {
   public function testMakeValuesClauseCanHandleSingleElementArray()
   {
@@ -39,7 +39,7 @@ class BaseTest extends PHPUnit_Framework_TestCase
   {
     $db = new TestDb();
     $this->assertEquals(
-      new Query('"col1" = ?', [1]),
+      new Query('set "col1" = ?', [1]),
       $db->makeSetClause([
         "col1" => 1,
       ])
@@ -50,7 +50,7 @@ class BaseTest extends PHPUnit_Framework_TestCase
   {
     $db = new TestDb();
     $this->assertEquals(
-      new Query('"col1" = ?, "col2" = ?', [1, "test"]),
+      new Query('set "col1" = ?, "col2" = ?', [1, "test"]),
       $db->makeSetClause([
         "col1" => 1,
         "col2" => "test",

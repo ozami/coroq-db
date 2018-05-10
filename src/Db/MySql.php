@@ -1,7 +1,7 @@
 <?php
 namespace Coroq\Db;
 
-class MySql extends Base
+class MySql extends \Coroq\Db
 {
   /**
    * @return void

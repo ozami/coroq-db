@@ -1,7 +1,7 @@
 <?php
 namespace Coroq\Db;
 
-class Sqlite extends Base
+class Sqlite extends \Coroq\Db
 {
   public function connect()
   {

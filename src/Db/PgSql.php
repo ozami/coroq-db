@@ -1,7 +1,7 @@
 <?php
 namespace Coroq\Db;
 
-class PgSql extends Base
+class PgSql extends \Coroq\Db
 {
   /**
    * @param Query $name

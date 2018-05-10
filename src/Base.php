@@ -286,6 +286,15 @@ abstract class Base
    */
   public function makeColumnClause($column)
   {
+    if ($column instanceof Query) {
+      return $column;
+    }
+    if (is_string($column)) {
+      return new Query($column);
+    }
+    if (!is_array($column)) {
+      throw new \LogicException();
+    }
     $column = array_map(function($col) {
       if ($col instanceof Query) {
         return $col;
@@ -298,7 +307,7 @@ abstract class Base
         return (new Query($match[1]))->append($name, "");
       }
       return $this->makeNameClause($col);
-    }, (array)$column);
+    }, $column);
     $column = array_filter($column, function($col) {
       return !$col->isEmpty();
     });

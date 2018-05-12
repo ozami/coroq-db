@@ -242,15 +242,34 @@ abstract class Db
    */
   public function makeInsertStatement(array $query)
   {
-    if (isset($query["column"])) {
-      if (!is_array(@$query["data"])) {
+    if (@$query["multiple"]) {
+      $values = $query["data"];
+    }
+    else {
+      $values = [$query["data"]];
+    }
+    if (!isset($query["column"])) {
+      if (@$query["multiple"]) {
         throw new \LogicException();
       }
-      $query["data"] = $this->arrayPick($query["data"], $query["column"]);
+      if (!is_array($values[0])) {
+        throw new \LogicException();
+      }
+      $query["column"] = array_keys($values[0]);
     }
-    return (new Query("insert"))
-      ->append($this->makeIntoClause(@$query["table"]))
-      ->append($this->makeValuesClause(@$query["data"]));
+    $values = array_map(function($values) use ($query) {
+      if (is_array($values)) {
+        $values = $this->arrayPick($values, $query["column"]);
+      }
+      return $values;
+    }, $values);
+    $q = (new Query("insert"))
+      ->append($this->makeIntoClause(@$query["table"]));
+    $names = array_map(function($name) {
+      return $this->makeNameClause($name);
+    }, $query["column"]);
+    $q = $q->append(Query::toList($names)->paren());
+    return $q->append($this->makeValuesClause($values));
   }
   
   /**
@@ -343,23 +362,25 @@ abstract class Db
   }
   
   /**
-   * @param array|Query $data
+   * @param array $values
    * @return Query
    */
-  public function makeValuesClause($data)
+  public function makeValuesClause(array $values)
   {
-    if ($data instanceof Query) {
-      return $data;
-    }
-    $names = [];
-    $values = [];
-    foreach ($data as $name => $value) {
-      $names[] = $this->makeNameClause($name);
-      $values[] = new Query("?", [$value]);
-    }
-    $names = Query::toList($names)->paren();
-    $values = Query::toList($values)->paren();
-    return $names->append("values")->append($values);
+    $values = array_map(function($values) {
+      if ($values instanceof Query) {
+        return $values->paren();
+      }
+      $values = array_map(function($value) {
+        if ($value instanceof Query) {
+          return $value;
+        }
+        return new Query("?", [$value]);
+      }, $values);
+      return Query::toList($values)->paren();
+    }, $values);
+    $values = Query::toList($values);
+    return (new Query("values"))->append($values);
   }
 
   /**

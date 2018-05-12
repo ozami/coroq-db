@@ -16,10 +16,10 @@ class DbTest extends PHPUnit_Framework_TestCase
   {
     $db = new TestDb();
     $this->assertEquals(
-      new Query('("col1") values (?)', [1]),
-      $db->makeValuesClause([
+      new Query('values (?)', [1]),
+      $db->makeValuesClause([[
         "col1" => 1,
-      ])
+      ]])
     );
   }
 
@@ -27,11 +27,11 @@ class DbTest extends PHPUnit_Framework_TestCase
   {
     $db = new TestDb();
     $this->assertEquals(
-      new Query('("col1", "col2") values (?, ?)', [1, "text"]),
-      $db->makeValuesClause([
+      new Query('values (?, ?)', [1, "text"]),
+      $db->makeValuesClause([[
         "col1" => 1,
         "col2" => "text",
-      ])
+      ]])
     );
   }
   

@@ -65,4 +65,8 @@ class PgSql extends \Coroq\Db
     }
     return parent::parseCondition($name, $op, $value);
   }
+
+  public function copyFromArray($table, array $rows, $delimiter = "\t", $null_as = "\\\\N") {
+    $this->pdo->pgsqlCopyFromArray($table, $rows, $delimiter, $null_as);
+  }
 }

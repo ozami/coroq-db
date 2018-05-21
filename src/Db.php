@@ -202,6 +202,15 @@ abstract class Db
    * @param array $query
    * @return \PDOStatement
    */
+  public function insertMultiple(array $query)
+  {
+    return $this->execute($this->makeInsertMultipleStatement($query));
+  }
+
+  /**
+   * @param array $query
+   * @return \PDOStatement
+   */
   public function update(array $query)
   {
     return $this->execute($this->makeUpdateStatement($query));
@@ -242,34 +251,48 @@ abstract class Db
    */
   public function makeInsertStatement(array $query)
   {
-    if (@$query["multiple"]) {
-      $values = $query["data"];
+    if (is_array($query["data"])) {
+      if (isset($query["column"])) {
+        $query["data"] = $this->arrayPick($query["data"], $query["column"]);
+      }
+      $query["column"] = array_keys($query["data"]);
     }
     else {
-      $values = [$query["data"]];
+      if (!isset($query["column"])) {
+        throw new \LogicException("The 'column' parameter required if 'data' is not an array.");
+      }
     }
-    if (!isset($query["column"])) {
-      if (@$query["multiple"]) {
-        throw new \LogicException();
-      }
-      if (!is_array($values[0])) {
-        throw new \LogicException();
-      }
-      $query["column"] = array_keys($values[0]);
-    }
-    $values = array_map(function($values) use ($query) {
-      if (is_array($values)) {
-        $values = $this->arrayPick($values, $query["column"]);
-      }
-      return $values;
-    }, $values);
     $q = (new Query("insert"))
       ->append($this->makeIntoClause(@$query["table"]));
     $names = array_map(function($name) {
       return $this->makeNameClause($name);
     }, $query["column"]);
     $q = $q->append(Query::toList($names)->paren());
-    return $q->append($this->makeValuesClause($values));
+    return $q->append($this->makeValuesClause([$query["data"]]));
+  }
+  
+  /**
+   * @param array $query
+   * @return Query
+   */
+  public function makeInsertMultipleStatement(array $query)
+  {
+    if (!isset($query["column"])) {
+      throw new \LogicException("The 'column' parameter required.");
+    }
+    $query["data"] = array_map(function($values) use ($query) {
+      if (is_array($values)) {
+        $values = $this->arrayPick($values, $query["column"]);
+      }
+      return $values;
+    }, $query["data"]);
+    $q = (new Query("insert"))
+      ->append($this->makeIntoClause(@$query["table"]));
+    $names = array_map(function($name) {
+      return $this->makeNameClause($name);
+    }, $query["column"]);
+    $q = $q->append(Query::toList($names)->paren());
+    return $q->append($this->makeValuesClause($query["data"]));
   }
   
   /**

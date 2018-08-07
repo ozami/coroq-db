@@ -233,23 +233,55 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::cat
+   * @covers Query::join
    */
- /* public function testCat() {
-    $combined = Query::cat([]);
-    $this->assertSame("", $combined->text);
-    $this->assertSame([], $combined->params);
+  public function testJoin() {
+    $this->assertEquals(
+      new Query(),
+      Query::join([])
+    );
 
-    $combined = Query::cat(array(new Query()));
-    $this->assertSame("", $combined->text);
-    $this->assertSame([], $combined->params);
+    $this->assertEquals(
+      new Query(),
+      Query::join([new Query()])
+    );
+    
+    $this->assertEquals(
+      new Query(),
+      Query::join([new Query(), new Query()])
+    );
+    
+    $q1 = new Query("test1 ?", [1]);
+    $q2 = new Query("test2 ?", [2]);
+    $q3 = new Query("test3 ?", [3]);
+    $result = Query::join([$q1, $q2, $q3]);
+    $this->assertEquals(
+      new Query("test1 ? test2 ? test3 ?", [1, 2, 3]),
+      $result
+    );
+    $this->assertNotSame($result, $q1);
+    $this->assertNotSame($result, $q2);
+    $this->assertNotSame($result, $q3);
 
-    $combined = Query::cat(array(new Query(), new Query()));
-    $this->assertSame("", $combined->text);
-    $this->assertSame([], $combined->params);
-
-    $combined = Query::cat(array(new Query("sql1", array("abc")), new Query("sql2", array("def"))));
-    $this->assertSame("sql1sql2", $combined->text);
-    $this->assertSame(array("abc", "def"), $combined->params);
-  }*/
+    $this->assertEquals(
+      new Query("test1 ? and test2 ?", [1, 2]),
+      Query::join([
+        new Query("test1 ?", [1]),
+        new Query("test2 ?", [2]),
+      ], " and ")
+    );
+  }
+  
+  /**
+   * @covers Query::toList
+   */
+  public function testToList() {
+    $this->assertEquals(
+      new Query("test1, test2"),
+      Query::toList([
+        new Query("test1"),
+        new Query("test2"),
+      ])
+    );
+  }
 }

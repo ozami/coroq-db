@@ -93,4 +93,27 @@ class DbTest extends PHPUnit_Framework_TestCase
       }
     }
   }
+  /**
+   * @covers Query::checkSqlInjection
+   */
+  /*
+  public function testCheckSqlInjection()
+  {
+    $q = new Query();
+    $r = $q->checkSqlInjection();
+    $this->assertSame(null, $r);
+
+    foreach (array(";", "\\", "#", "--", "/*") as $injection) {
+      foreach (array($injection, "test$injection", "{$injection}test", "test{$injection}test") as $s) {
+        $q = new Query($s);
+        try {
+          $q->checkSqlInjection();
+          $this->fail("Could not catch '$injection' in '$s'");
+        }
+        catch (\RuntimeException $e) {
+          $this->assertSame($e->getMessage(), "err_db_sql_injection");
+        }
+      }
+    }
+  }*/
 }

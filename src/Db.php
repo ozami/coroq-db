@@ -48,7 +48,7 @@ abstract class Db
   public function begin()
   {
     if ($this->transactionStack == 0) {
-      $this->pdo()->exec("begin");
+      $this->exec("begin");
     }
     ++$this->transactionStack;
   }
@@ -75,29 +75,29 @@ abstract class Db
       return;
     }
     if ($this->rollbacked) {
-      $this->pdo()->exec("rollback");
+      $this->exec("rollback");
       $this->rollbacked = false;
       return;
     }
-    $this->pdo()->exec("commit");
+    $this->exec("commit");
   }
 
   public function savepoint($name)
   {
     $name = $this->quoteName($name);
-    $this->pdo()->exec("savepoint $name");
+    $this->exec("savepoint $name");
   }
 
   public function releaseSavepoint($name)
   {
     $name = $this->quoteName($name);
-    $this->pdo()->exec("release savepoint $name");
+    $this->exec("release savepoint $name");
   }
 
   public function rollbackTo($name)
   {
     $name = $this->quoteName($name);
-    $this->pdo()->exec("rollback to savepoint $name");
+    $this->exec("rollback to savepoint $name");
   }
   
   /**
@@ -671,5 +671,14 @@ abstract class Db
   public function arrayPick(array $data, array $keys)
   {
     return array_intersect_key($data, array_fill_keys($keys, null));
+  }
+
+  /**
+   * @param string $query
+   * @return int
+   */
+  protected function exec($query)
+  {
+    return $this->pdo()->exec($query);
   }
 }

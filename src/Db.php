@@ -99,33 +99,16 @@ abstract class Db
     $name = $this->quoteName($name);
     $this->exec("rollback to savepoint $name");
   }
-  
+
   /**
    * @param Query|string $query
-   * @return \PDOStatement
+   * @return int
    */
   public function execute($query)
   {
-    $query = new Query($query);
-    if (!isset($this->statementCache[$query->text])) {
-      $this->checkSqlInjection($query);
-      $this->statementCache[$query->text] = $this->pdo()->prepare($query->text);
-    }
-    $s = $this->statementCache[$query->text];
-    // note that bindParam() takes $variable as a reference
-    $params = array_values($query->params);
-    foreach ($params as $i => $p) {
-      if ($p instanceof QueryParam) {
-        $s->bindParam($i + 1, $params[$i]->value, $p->type);
-      }
-      else {
-        $s->bindParam($i + 1, $params[$i], \PDO::PARAM_STR);
-      }
-    }
-    $s->execute();
-    return $s;
+    return $this->prepareAndExecute($query)->rowCount();
   }
-  
+
   /**
    * @param Query|string $query
    * @param string $fetch
@@ -133,7 +116,7 @@ abstract class Db
    */
   public function query($query, $fetch = self::FETCH_ALL)
   {
-    $s = $this->execute($query);
+    $s = $this->prepareAndExecute($query);
     $rows = $s->fetchAll(\PDO::FETCH_ASSOC);
     if ($fetch == self::FETCH_ALL) {
       return $rows;
@@ -191,7 +174,7 @@ abstract class Db
   
   /**
    * @param array $query
-   * @return \PDOStatement
+   * @return int
    */
   public function insert(array $query)
   {
@@ -200,7 +183,7 @@ abstract class Db
   
   /**
    * @param array $query
-   * @return \PDOStatement
+   * @return int
    */
   public function insertMultiple(array $query)
   {
@@ -209,7 +192,7 @@ abstract class Db
 
   /**
    * @param array $query
-   * @return \PDOStatement
+   * @return int
    */
   public function update(array $query)
   {
@@ -218,7 +201,7 @@ abstract class Db
   
   /**
    * @param array $query
-   * @return \PDOStatement
+   * @return int
    */
   public function delete(array $query)
   {
@@ -680,5 +663,31 @@ abstract class Db
   protected function exec($query)
   {
     return $this->pdo()->exec($query);
+  }
+
+  /**
+   * @param Query|string $query
+   * @return \PDOStatement
+   */
+  protected function prepareAndExecute($query)
+  {
+    $query = new Query($query);
+    if (!isset($this->statementCache[$query->text])) {
+      $this->checkSqlInjection($query);
+      $this->statementCache[$query->text] = $this->pdo()->prepare($query->text);
+    }
+    $s = $this->statementCache[$query->text];
+    // note that bindParam() takes $variable as a reference
+    $params = array_values($query->params);
+    foreach ($params as $i => $p) {
+      if ($p instanceof QueryParam) {
+        $s->bindParam($i + 1, $params[$i]->value, $p->type);
+      }
+      else {
+        $s->bindParam($i + 1, $params[$i], \PDO::PARAM_STR);
+      }
+    }
+    $s->execute();
+    return $s;
   }
 }

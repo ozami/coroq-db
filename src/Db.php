@@ -1,7 +1,6 @@
 <?php
 namespace Coroq;
 use \Coroq\Db\Query;
-use \Coroq\Db\QueryParam;
 
 abstract class Db
 {
@@ -680,12 +679,7 @@ abstract class Db
     // note that bindParam() takes $variable as a reference
     $params = array_values($query->params);
     foreach ($params as $i => $p) {
-      if ($p instanceof QueryParam) {
-        $s->bindParam($i + 1, $params[$i]->value, $p->type);
-      }
-      else {
-        $s->bindParam($i + 1, $params[$i], \PDO::PARAM_STR);
-      }
+      $s->bindParam($i + 1, $params[$i]->value, $p->type);
     }
     $s->execute();
     return $s;

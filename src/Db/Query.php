@@ -6,7 +6,7 @@ class Query
   /** @var string */
   public $text;
 
-  /** @var array */
+  /** @var array<QueryParam> */
   public $params;
   
   /**
@@ -26,7 +26,13 @@ class Query
       throw new \LogicException();
     }
     $this->text = trim("$text");
-    $this->params = array_values($params);
+    $this->params = [];
+    foreach ($params as $param) {
+      if (!($param instanceof QueryParam)) {
+        $param = new QueryParam($param);
+      }
+      $this->params[] = $param;
+    }
   }
 
   /**

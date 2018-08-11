@@ -18,7 +18,10 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   public function testConstructionWithArguments() {
     $q = new Query("? ?", ["param1", 2]);
     $this->assertSame("? ?", $q->text);
-    $this->assertSame(["param1", 2], $q->params);
+    $this->assertEquals(
+      [new QueryParam("param1"), new QueryParam(2)],
+      $q->params
+    );
   }
 
   /**
@@ -27,7 +30,10 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   public function testConstructionWithAssociativeArguments() {
     $q = new Query("? ?", ["param1" => 1, "second" => "two"]);
     $this->assertSame("? ?", $q->text);
-    $this->assertSame([1, "two"], $q->params);
+    $this->assertEquals(
+      [new QueryParam(1), new QueryParam("two")],
+      $q->params
+    );
   }
 
   /**

@@ -95,7 +95,7 @@ class DbTest extends PHPUnit_Framework_TestCase
   }
 
   /**
-   * @covers Query::checkSqlInjection
+   * @covers Coroq\Db::checkSqlInjection
    */
   public function testCheckSqlInjection() {
     $db = new TestDb();

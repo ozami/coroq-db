@@ -4,7 +4,7 @@ use Coroq\Db\QueryParam;
 
 class QueryTest extends PHPUnit_Framework_TestCase {
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    */
   public function testConstructionWithNoArguments() {
     $q = new Query();
@@ -13,7 +13,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    */
   public function testConstructionWithArguments() {
     $q = new Query("? ?", ["param1", 2]);
@@ -25,7 +25,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    */
   public function testConstructionWithAssociativeArguments() {
     $q = new Query("? ?", ["param1" => 1, "second" => "two"]);
@@ -37,7 +37,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    */
   public function testConstructionWithNumber() {
     $q = new Query(1);
@@ -46,7 +46,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    * @expectedException \LogicException
    */
   public function testConstructionWithPlaceholderAndParamsUnmatch1() {
@@ -54,7 +54,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    * @expectedException \LogicException
    */
   public function testConstructionWithPlaceholderAndParamsUnmatch2() {
@@ -62,7 +62,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::__construct
+   * @covers Coroq\Db\Query::__construct
    * @expectedException \LogicException
    */
   public function testConstructionWithPlaceholderAndParamsUnmatch3() {
@@ -70,7 +70,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::isEmpty
+   * @covers Coroq\Db\Query::isEmpty
    */
   public function testIsEmpty() {
     $q = new Query();
@@ -81,7 +81,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::isEmpty
+   * @covers Coroq\Db\Query::isEmpty
    */
   public function testIsNotEmpty() {
     $q = new Query("test");
@@ -89,7 +89,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::append
+   * @covers Coroq\Db\Query::append
    */
   public function testAppend() {
     $this->assertEquals(
@@ -154,7 +154,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::append
+   * @covers Coroq\Db\Query::append
    */
   public function testAppendString() {
     $this->assertEquals(
@@ -174,7 +174,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::append
+   * @covers Coroq\Db\Query::append
    */
   public function testAppendImmutability() {
     $q = new Query();
@@ -184,7 +184,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::appendAnd
+   * @covers Coroq\Db\Query::appendAnd
    */
   public function testAppendAnd() {
     $left = new Query("left ?", [1]);
@@ -199,7 +199,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::appendOr
+   * @covers Coroq\Db\Query::appendOr
    */
   public function testAppendOr() {
     $left = new Query("left ?", [1]);
@@ -214,7 +214,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::paren
+   * @covers Coroq\Db\Query::paren
    */
   public function testParen() {
     $this->assertEquals(
@@ -229,7 +229,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::paren
+   * @covers Coroq\Db\Query::paren
    */
   public function testParenImmutability() {
     $q = new Query("test + ?", [1]);
@@ -239,7 +239,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * @covers Query::join
+   * @covers Coroq\Db\Query::join
    */
   public function testJoin() {
     $this->assertEquals(
@@ -279,7 +279,7 @@ class QueryTest extends PHPUnit_Framework_TestCase {
   }
   
   /**
-   * @covers Query::toList
+   * @covers Coroq\Db\Query::toList
    */
   public function testToList() {
     $this->assertEquals(

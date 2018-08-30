@@ -1,6 +1,6 @@
 <?php
 namespace Coroq;
-use \Coroq\Db\Query;
+use Coroq\Db\Query;
 
 abstract class Db
 {

@@ -1,6 +1,6 @@
 <?php
-use \Coroq\Db;
-use \Coroq\Db\Query;
+use Coroq\Db;
+use Coroq\Db\Query;
 
 class TestDb extends Db
 {

@@ -4,6 +4,30 @@ namespace Coroq\Db;
 class PgSql extends \Coroq\Db
 {
   /**
+   * @param string $name
+   * @return int
+   */
+  public function nextSequence($name)
+  {
+    return $this->query(
+      new Query("select nextval(?)", [$name]),
+      self::FETCH_ONE
+    );
+  }
+
+  /**
+   * @param string $name
+   * @return int
+   */
+  public function getSequence($name)
+  {
+    return $this->query(
+      new Query("select currval(?)", [$name]),
+      self::FETCH_ONE
+    );
+  }
+
+  /**
    * @param Query $name
    * @param string $op
    * @param mixed $value

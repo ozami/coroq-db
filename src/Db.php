@@ -224,8 +224,8 @@ abstract class Db
       ->append($this->makeWhereClause(@$query["where"]))
       ->append($this->makeGroupByClause(@$query["group"]))
       ->append($this->makeOrderByClause(@$query["order"]))
-      ->append($this->makeOffsetClause(@$query["offset"]))
-      ->append($this->makeLimitClause(@$query["limit"]));
+      ->append($this->makeLimitClause(@$query["limit"]))
+      ->append($this->makeOffsetClause(@$query["offset"]));
   }
   
   /**

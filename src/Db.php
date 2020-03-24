@@ -216,6 +216,7 @@ abstract class Db
     $distinct = @$query["distinct"] ? "distinct" : null;
     return (new Query("select"))
       ->append($distinct)
+      ->append($this->makeSelectOptionClause(@$query["option"]))
       ->append($this->makeColumnClause(@$query["column"] ?: "*"))
       ->append($this->makeFromClause(@$query["table"]))
       ->append($this->makeAliasClause(@$query["alias"]))
@@ -304,6 +305,32 @@ abstract class Db
     return (new Query("delete"))
       ->append($this->makeFromClause(@$query["table"]))
       ->append($this->makeWhereClause(@$query["where"]));
+  }
+
+  /**
+   * @param array|Query|string|null $option
+   * @return Query
+   */
+  public function makeSelectOptionClause($option) {
+    if ($option instanceof Query) {
+      return $option;
+    }
+    if (is_string($option)) {
+      return new Query($option);
+    }
+    if (is_array($option)) {
+      $options = array_map(function($option) {
+        return $this->makeSelectOptionClause($option);
+      }, $option);
+      $options = array_filter($options, function($option) {
+        return !$option->isEmpty();
+      });
+      return Query::join($joins);
+    }
+    if ($option === null) {
+      return new Query();
+    }
+    throw new \LogicException();
   }
 
   /**

@@ -461,6 +461,7 @@ abstract class Db
     }
     return (new Query())
       ->append($join["type"])
+      ->append("join")
       ->append($this->makeNameClause(@$join["table"]))
       ->append($this->makeAliasClause(@$join["alias"]))
       ->append($this->makeOnClause(@$join["where"]));

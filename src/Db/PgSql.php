@@ -41,14 +41,11 @@ class PgSql extends \Coroq\Db
       "re" => "~", "!re" => "!~",
     ];
     if (isset($simple_ops[$op])) {
-      $q = new Query("$name {$simple_ops[$op]}");
+      $q = $name->append($simple_ops[$op]);
       if ($value instanceof Query) {
-        $q->append($value);
+        return $q->append($value);
       }
-      else {
-        $q->append(new Query("?", [$value]));
-      }
-      return $q;
+      return $q->append(new Query("?", [$value]));
     }
     // string operator
     $string_ops = [

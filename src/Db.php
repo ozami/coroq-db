@@ -18,6 +18,8 @@ abstract class Db
   public $rollbacked = false;
   public $statementCache = [];
   public $tableInfos = [];
+  private $log = [];
+  private $logging_enabled = false;
 
   public function __construct($dsn, $user = null, $pw = null, array $options = [])
   {
@@ -26,7 +28,7 @@ abstract class Db
     $this->pw = $pw;
     $this->options = $options;
   }
-  
+
   public function pdo()
   {
     if (!$this->pdo) {
@@ -34,7 +36,7 @@ abstract class Db
     }
     return $this->pdo;
   }
-  
+
   /**
    * @return void
    */
@@ -170,7 +172,7 @@ abstract class Db
       @$query["fetch"] ?: self::FETCH_ALL
     );
   }
-  
+
   /**
    * @param array $query
    * @return int
@@ -179,7 +181,7 @@ abstract class Db
   {
     return $this->execute($this->makeInsertStatement($query));
   }
-  
+
   /**
    * @param array $query
    * @return int
@@ -197,7 +199,7 @@ abstract class Db
   {
     return $this->execute($this->makeUpdateStatement($query));
   }
-  
+
   /**
    * @param array $query
    * @return int
@@ -206,7 +208,7 @@ abstract class Db
   {
     return $this->execute($this->makeDeleteStatement($query));
   }
-  
+
   /**
    * @param array $query
    * @return Query
@@ -227,7 +229,7 @@ abstract class Db
       ->append($this->makeLimitClause(@$query["limit"]))
       ->append($this->makeOffsetClause(@$query["offset"]));
   }
-  
+
   /**
    * @param array $query
    * @return Query
@@ -253,7 +255,7 @@ abstract class Db
     $q = $q->append(Query::toList($names)->paren());
     return $q->append($this->makeValuesClause([$query["data"]]));
   }
-  
+
   /**
    * @param array $query
    * @return Query
@@ -277,7 +279,7 @@ abstract class Db
     $q = $q->append(Query::toList($names)->paren());
     return $q->append($this->makeValuesClause($query["data"]));
   }
-  
+
   /**
    * @param array $query
    * @return Query
@@ -366,22 +368,22 @@ abstract class Db
     });
     return Query::toList($column);
   }
-  
+
   public function makeFromClause($name)
   {
     return $this->makePrefixedNameClauseHelper("from", $name);
   }
-  
+
   public function makeAliasClause($name)
   {
     return $this->makePrefixedNameClauseHelper("as", $name);
   }
-  
+
   public function makeIntoClause($name)
   {
     return $this->makePrefixedNameClauseHelper("into", $name);
   }
-  
+
   public function makePrefixedNameClauseHelper($prefix, $name)
   {
     if (!($name instanceof Query)) {
@@ -392,7 +394,7 @@ abstract class Db
     }
     return (new Query($prefix))->append($name);
   }
-  
+
   /**
    * @param array $values
    * @return Query
@@ -501,7 +503,7 @@ abstract class Db
     }, $parts);
     return join(".", $parts);
   }
-  
+
   public function makeWhereClause($conditions)
   {
     $q = $this->makeConditionClause($conditions);
@@ -510,7 +512,7 @@ abstract class Db
     }
     return (new Query("where"))->append($q);
   }
-  
+
   public function makeOnClause($conditions)
   {
     $q = $this->makeConditionClause($conditions);
@@ -519,7 +521,7 @@ abstract class Db
     }
     return (new Query("on"))->append($q);
   }
-  
+
   /**
    * @param array|Query|string $where
    * @return Query
@@ -559,7 +561,7 @@ abstract class Db
     }
     return Query::join($where, " and ");
   }
-  
+
   public function makeGroupByClause($group)
   {
     $group = array_map(function($g) {
@@ -573,7 +575,7 @@ abstract class Db
     }
     return (new Query("group by"))->append(Query::toList($group));
   }
-  
+
   public function makeOrderByClause($order)
   {
     static $dirs = ["+" => "asc", "-" => "desc"];
@@ -602,7 +604,7 @@ abstract class Db
     }
     return (new Query("order by"))->append(Query::toList($order));
   }
-  
+
   public function makeOffsetClause($offset)
   {
     if ($offset instanceof Query) {
@@ -618,7 +620,7 @@ abstract class Db
     }
     return (new Query("offset"))->append($offset);
   }
-  
+
   public function makeLimitClause($limit)
   {
     if ($limit instanceof Query) {
@@ -667,12 +669,12 @@ abstract class Db
     }
     throw new \LogicException();
   }
-  
+
   public function lastInsertId($name = null)
   {
     return $this->pdo()->lastInsertId($name);
   }
-  
+
   /**
    * @param array $data
    * @param array $keys
@@ -699,17 +701,76 @@ abstract class Db
   protected function prepareAndExecute($query)
   {
     $query = new Query($query);
-    if (!isset($this->statementCache[$query->text])) {
-      $this->checkSqlInjection($query);
-      $this->statementCache[$query->text] = $this->pdo()->prepare($query->text);
+    try {
+      if (!isset($this->statementCache[$query->text])) {
+        $this->checkSqlInjection($query);
+        $this->statementCache[$query->text] = $this->pdo()->prepare($query->text);
+      }
+      $s = $this->statementCache[$query->text];
+      // note that bindParam() takes $variable as a reference
+      $params = array_values($query->params);
+      foreach ($params as $i => $p) {
+        $s->bindParam($i + 1, $params[$i]->value, $p->type);
+      }
+      $time_started = microtime(true);
+      $s->execute();
+      $this->addLog($query, null, microtime(true) - $time_started);
+      return $s;
     }
-    $s = $this->statementCache[$query->text];
-    // note that bindParam() takes $variable as a reference
-    $params = array_values($query->params);
-    foreach ($params as $i => $p) {
-      $s->bindParam($i + 1, $params[$i]->value, $p->type);
+    catch (\Exception $exception) {
+      $this->addLog($query, $exception->getMessage(), 0);
+      throw $exception;
     }
-    $s->execute();
-    return $s;
+  }
+
+  public function setLogging($enable = true) {
+    $this->logging_enabled = (bool)$enable;
+  }
+
+  public function getLog() {
+    $total_time = 0;
+    $queries = [];
+    $formatValue = function($value) {
+      if ($value === null) {
+        return $value;
+      }
+      return "'$value'";
+    };
+    $formatTime = function($time) {
+      return number_format($time * 1000, 2) . " ms";
+    };
+    foreach ($this->log as $log_entry) {
+      $total_time += $log_entry["time"];
+      $query = "";
+      $arguments = array_values($log_entry["query"]->params);
+      foreach (explode("?", $log_entry["query"]->text) as $position => $part) {
+        $query .= $part . $formatValue(@$arguments[$position]->value);
+      }
+      $queries[] = [
+        "time" => $formatTime($log_entry["time"]),
+        "result" => $log_entry["error"] ?: "OK",
+        "query" => $query,
+      ];
+    }
+    return [
+      "count" => number_format(count($this->log)),
+      "time" => $formatTime($total_time),
+      "queries" => $queries,
+    ];
+  }
+
+  public function clearLog() {
+    $this->log = [];
+  }
+
+  protected function addLog($query, $error, $time) {
+    if (!$this->logging_enabled) {
+      return;
+    }
+    $this->log[] = [
+      "time" => $time,
+      "error" => $error,
+      "query" => $query,
+    ];
   }
 }

@@ -327,7 +327,7 @@ abstract class Db
       $options = array_filter($options, function($option) {
         return !$option->isEmpty();
       });
-      return Query::join($joins);
+      return Query::join($options);
     }
     if ($option === null) {
       return new Query();

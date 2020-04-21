@@ -702,6 +702,7 @@ abstract class Db
   {
     $query = new Query($query);
     try {
+      $time_started = microtime(true);
       if (!isset($this->statementCache[$query->text])) {
         $this->checkSqlInjection($query);
         $this->statementCache[$query->text] = $this->pdo()->prepare($query->text);
@@ -712,7 +713,6 @@ abstract class Db
       foreach ($params as $i => $p) {
         $s->bindParam($i + 1, $params[$i]->value, $p->type);
       }
-      $time_started = microtime(true);
       $s->execute();
       $this->addLog($query, null, microtime(true) - $time_started);
       return $s;

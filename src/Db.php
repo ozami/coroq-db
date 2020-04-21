@@ -714,11 +714,11 @@ abstract class Db
         $s->bindParam($i + 1, $params[$i]->value, $p->type);
       }
       $s->execute();
-      $this->addLog($query, null, microtime(true) - $time_started);
+      $this->addLog($query, microtime(true) - $time_started);
       return $s;
     }
     catch (\Exception $exception) {
-      $this->addLog($query, $exception->getMessage(), 0);
+      $this->addLog($query, 0, $exception->getMessage());
       throw $exception;
     }
   }
@@ -728,8 +728,10 @@ abstract class Db
   }
 
   public function getLog() {
-    $total_time = 0;
-    $queries = [];
+    return $this->log;
+  }
+
+  public function getFormattedLog() {
     $formatValue = function($value) {
       if ($value === null) {
         return $value;
@@ -739,31 +741,36 @@ abstract class Db
     $formatTime = function($time) {
       return number_format($time * 1000, 2) . " ms";
     };
+    $formatted = ["Count: " . number_format(count($this->log))];
+    $total_time = 0;
     foreach ($this->log as $log_entry) {
       $total_time += $log_entry["time"];
+    }
+    $formatted[] = "Time: " . $formatTime($total_time);
+    foreach ($this->log as $index => $log_entry) {
       $query = "";
       $arguments = array_values($log_entry["query"]->params);
       foreach (explode("?", $log_entry["query"]->text) as $position => $part) {
         $query .= $part . $formatValue(@$arguments[$position]->value);
       }
-      $queries[] = [
-        "time" => $formatTime($log_entry["time"]),
-        "result" => $log_entry["error"] ?: "OK",
-        "query" => $query,
-      ];
+      $line_number = $index + 1;
+      $formatted[] = join(" ", [
+        "$line_number.",
+        $formatTime($log_entry["time"]),
+        $query,
+      ]);
+      if (isset($log_entry["error"])) {
+        $formatted[] = str_repeat(" ", strlen((string)$line_number) + 2) . $log_entry["error"];
+      }
     }
-    return [
-      "count" => number_format(count($this->log)),
-      "time" => $formatTime($total_time),
-      "queries" => $queries,
-    ];
+    return join("\n", $formatted) . "\n";
   }
 
   public function clearLog() {
     $this->log = [];
   }
 
-  protected function addLog($query, $error, $time) {
+  protected function addLog($query, $time, $error = null) {
     if (!$this->logging_enabled) {
       return;
     }

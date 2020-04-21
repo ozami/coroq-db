@@ -1,6 +1,7 @@
 <?php
 use Coroq\Db;
 use Coroq\Db\Query;
+use \Mockery as Mock;
 
 class TestDb extends Db
 {
@@ -10,8 +11,25 @@ class TestDb extends Db
   }
 }
 
+class PdoMockDb extends Db
+{
+  private $pdo_mock;
+  public function __construct($pdo_mock) {
+    parent::__construct("");
+    $this->pdo_mock = $pdo_mock;
+  }
+  public function connect() {
+    $this->pdo = $this->pdo_mock;
+  }
+}
+
 class DbTest extends PHPUnit_Framework_TestCase
 {
+  public function tearDown()
+  {
+    Mock::close();
+  }
+
   public function testMakeValuesClauseCanHandleSingleElementArray()
   {
     $db = new TestDb();
@@ -113,5 +131,20 @@ class DbTest extends PHPUnit_Framework_TestCase
         }
       }
     }
+  }
+
+  public function testLogFormat() {
+    $statement = Mock::mock('\PDOStatement');
+    $statement->shouldReceive("bindParam");
+    $statement->shouldReceive("execute");
+    $statement->shouldReceive("rowCount");
+    $pdo = Mock::mock('\PDO');
+    $pdo->shouldReceive("prepare")->andReturn($statement);
+    $db = new PdoMockDb($pdo);
+    $db->setLogging(true);
+    $db->execute(new Query("test ?", [0]));
+    $db->execute(new Query("test ?", [1]));
+    $log = $db->getFormattedLog();
+    $this->assertEquals(1, preg_match('|^Count: 2\nTime: [0-9.]+ ms\n([12]\. [0-9.]+ ms test \'[01]\'\n){2}$|', $log));
   }
 }

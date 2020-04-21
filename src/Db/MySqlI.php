@@ -34,15 +34,27 @@ class MySqlI extends Db {
    * @return void
    */
   public function connect() {
-    $mysqli = new \mysqli(
+    $mysqli = mysqli_init();
+    $ssl_options = @$this->options["ssl"];
+    if ($ssl_options) {
+      $mysqli->ssl_set(
+        @$ssl_options["key"],
+        @$ssl_options["certificate"],
+        @$ssl_options["ca_certificate"],
+        @$ssl_options["ca_certificate_directory"],
+        @$ssl_options["cipher"]
+      );
+    }
+    $connected = $mysqli->real_connect(
       @$this->options["host"],
       @$this->options["user"],
       @$this->options["password"],
       @$this->options["database"],
       @$this->options["port"],
-      @$this->options["socket"]
+      @$this->options["socket"],
+      @$this->options["flags"]
     );
-    if ($mysqli->connect_errno) {
+    if (!$connected) {
       throw new Error($mysqli->connect_error, $mysqli->connect_errno);
     }
     $this->mysqli = $mysqli;

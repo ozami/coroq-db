@@ -1,40 +1,16 @@
 <?php
-namespace Coroq\Db;
+namespace Coroq\Db\QueryBuilder;
+use \Coroq\Db\Query;
+use \Coroq\Db\QueryBuilder;
 
-class PgSql extends \Coroq\Db
-{
-  /**
-   * @param string $name
-   * @return int
-   */
-  public function nextSequence($name)
-  {
-    return $this->query(
-      new Query("select nextval(?)", [$name]),
-      self::FETCH_ONE
-    );
-  }
-
-  /**
-   * @param string $name
-   * @return int
-   */
-  public function getSequence($name)
-  {
-    return $this->query(
-      new Query("select currval(?)", [$name]),
-      self::FETCH_ONE
-    );
-  }
-
+class PostgreSql extends QueryBuilder {
   /**
    * @param Query $name
    * @param string $op
    * @param mixed $value
    * @return Query
    */
-  public function parseCondition(Query $name, $op, $value)
-  {
+  public function parseCondition(Query $name, $op, $value) {
     // simple operators
     $simple_ops = [
       "ilike" => "ilike", "!ilike" => "not ilike",
@@ -85,9 +61,5 @@ class PgSql extends \Coroq\Db
       return $q;
     }
     return parent::parseCondition($name, $op, $value);
-  }
-
-  public function copyFromArray($table, array $rows, $delimiter = "\t", $null_as = "\\\\N") {
-    $this->pdo->pgsqlCopyFromArray($table, $rows, $delimiter, $null_as);
   }
 }

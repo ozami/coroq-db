@@ -87,6 +87,19 @@ abstract class Pdo extends Db {
   }
 
   /**
+   * @param string $query
+   * @return void
+   */
+  protected function doExecuteDirectly($query) {
+    try {
+      $this->pdo()->exec($query);
+    }
+    catch (\PDOException $exception) {
+      throw new Error($exception);
+    }
+  }
+
+  /**
    * @return mixed
    */
   public function lastInsertId($name = null) {

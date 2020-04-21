@@ -31,7 +31,7 @@ abstract class Db {
 
   public function begin() {
     if ($this->transactionStack == 0) {
-      $this->execute("begin");
+      $this->executeDirectly("begin");
     }
     ++$this->transactionStack;
   }
@@ -55,7 +55,7 @@ abstract class Db {
       return;
     }
     if ($this->rollbacked) {
-      $this->execute("rollback");
+      $this->executeDirectly("rollback");
       $this->rollbacked = false;
       return;
     }
@@ -64,17 +64,17 @@ abstract class Db {
 
   public function savepoint($name) {
     $name = $this->query_builder->quoteName($name);
-    $this->execute("savepoint $name");
+    $this->executeDirectly("savepoint $name");
   }
 
   public function releaseSavepoint($name) {
     $name = $this->query_builder->quoteName($name);
-    $this->execute("release savepoint $name");
+    $this->executeDirectly("release savepoint $name");
   }
 
   public function rollbackTo($name) {
     $name = $this->query_builder->quoteName($name);
-    $this->execute("rollback to savepoint $name");
+    $this->executeDirectly("rollback to savepoint $name");
   }
 
   /**
@@ -99,6 +99,32 @@ abstract class Db {
    * @return void
    */
   abstract protected function doExecute(Query $query);
+
+  /**
+   * @param string $query
+   * @return void
+   */
+  protected function executeDirectly($query) {
+    if (!is_string($query)) {
+      throw new \DomainException('Query must be type of string');
+    }
+    $this->query_builder->checkSqlInjection(new Query($query));
+    try {
+      $time_started = microtime(true);
+      $this->doExecuteDirectly($query);
+      $this->addLog(new Query($query), microtime(true) - $time_started);
+    }
+    catch (\Exception $exception) {
+      $this->addLog(new Query($query), 0, $exception->getMessage());
+      throw $exception;
+    }
+  }
+
+  /**
+   * @param string $query
+   * @return void
+   */
+  abstract protected function doExecuteDirectly($query);
 
   /**
    * Query and fetch the result

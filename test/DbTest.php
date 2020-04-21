@@ -1,8 +1,13 @@
 <?php
 use Coroq\Db;
 use Coroq\Db\Query;
+use \Mockery as Mock;
 
 class TestDb extends Db {
+  public function tearDown() {
+    Mock::close();
+  }
+
   public function __construct() {
     parent::__construct(new Coroq\Db\QueryBuilder());
   }
@@ -12,6 +17,8 @@ class TestDb extends Db {
   }
   protected function doQuery(Query $query) {
   }
+  protected function doExecuteDirectly($query) {
+  }
   public function lastInsertId($name = null) {
   }
   public function lastAffectedRowsCount() {
@@ -19,6 +26,15 @@ class TestDb extends Db {
 }
 
 class DbTest extends PHPUnit_Framework_TestCase {
+  public function testBegin() {
+    $db = Mock::mock("TestDb[doExecuteDirectly]")->shouldAllowMockingProtectedMethods();
+    $db->shouldReceive("doExecuteDirectly")
+      ->once()
+      ->with("begin")
+      ->andReturn(null);
+    $db->begin();
+  }
+
   public function testLogFormat() {
     $db = new TestDb();
     $db->setLogging(true);

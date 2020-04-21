@@ -105,6 +105,17 @@ class MySqlI extends Db {
   }
 
   /**
+   * @param string $query
+   * @return void
+   */
+  protected function doExecuteDirectly($query) {
+    $mysqli = $this->mysqli();
+    if (!$mysqli->real_query($query)) {
+      throw new Error($mysqli->error, $mysqli->errno);
+    }
+  }
+
+  /**
    * @return mixed
    */
   public function lastInsertId($name = null) {

@@ -59,7 +59,7 @@ abstract class Db {
       $this->rollbacked = false;
       return;
     }
-    $this->execute("commit");
+    $this->executeDirectly("commit");
   }
 
   public function savepoint($name) {

@@ -4,10 +4,6 @@ use Coroq\Db\Query;
 use \Mockery as Mock;
 
 class TestDb extends Db {
-  public function tearDown() {
-    Mock::close();
-  }
-
   public function __construct() {
     parent::__construct(new Coroq\Db\QueryBuilder());
   }
@@ -25,7 +21,14 @@ class TestDb extends Db {
   }
 }
 
+/**
+ * @covers Coroq\Db
+ */
 class DbTest extends PHPUnit_Framework_TestCase {
+  public function tearDown() {
+    Mock::close();
+  }
+
   public function testBegin() {
     $db = Mock::mock("TestDb[doExecuteDirectly]")->shouldAllowMockingProtectedMethods();
     $db->shouldReceive("doExecuteDirectly")

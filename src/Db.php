@@ -29,6 +29,11 @@ abstract class Db {
    */
   abstract public function connect();
 
+  public function transaction() {
+    $this->begin();
+    return new Db\Transaction($this);
+  }
+
   public function begin() {
     if ($this->transactionStack == 0) {
       $this->executeDirectly("begin");

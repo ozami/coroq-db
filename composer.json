@@ -22,6 +22,7 @@
         }
     },
     "scripts": {
-        "test": "@php vendor/bin/phpunit test/"
+        "test": "@php vendor/bin/phpunit test/",
+        "coverage": "@php -n -d extension=xdebug.so -d extension=json.so -d extension=pdo.so vendor/bin/phpunit --coverage-html coverage test/"
     }
 }

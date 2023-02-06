@@ -10,8 +10,8 @@ class Query
   public $params;
   
   /**
-   * @param Query|string $text
-   * @param array $params
+   * @param Query|string|null $text
+   * @param array<mixed> $params
    */
   public function __construct($text = "", array $params = [])
   {
@@ -22,10 +22,11 @@ class Query
       return;
     }
     // create
+    $text = "$text";
     if (substr_count($text, "?") != count($params)) {
       throw new \LogicException();
     }
-    $this->text = trim("$text");
+    $this->text = trim($text);
     $this->params = [];
     foreach ($params as $param) {
       if (!($param instanceof QueryParam)) {
@@ -44,7 +45,7 @@ class Query
   }
 
   /**
-   * @param Query|string $x
+   * @param Query|string|null $x
    * @param string $glue
    * @return Query
    */
@@ -63,11 +64,19 @@ class Query
     );
   }
 
+  /**
+   * @param self|string $x
+   * @return self
+   */
   public function appendAnd($x)
   {
     return $this->append($x, " and ");
   }
 
+  /**
+   * @param self|string $x
+   * @return self
+   */
   public function appendOr($x)
   {
     return $this->append($x, " or ");
@@ -88,7 +97,7 @@ class Query
   }
 
   /**
-   * @param array $queries
+   * @param array<self|string> $queries
    * @param string $glue
    * @return Query
    */
@@ -105,7 +114,7 @@ class Query
   }
   
   /**
-   * @param array $items
+   * @param array<self|string> $items
    * @return Query
    */
   public static function toList(array $items)

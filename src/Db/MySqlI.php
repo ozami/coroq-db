@@ -5,7 +5,7 @@ use Coroq\Db;
 class MySqlI extends Db {
   /** @var \mysqli|null */
   private $mysqli;
-  /** @var array */
+  /** @var array<string,mixed> */
   private $options;
   /** @var array<\mysqli_stmt> */
   private $statements = [];
@@ -13,7 +13,7 @@ class MySqlI extends Db {
   private $last_statement;
 
   /**
-   * @param array $options
+   * @param array<string,mixed> $options
    */
   public function __construct(array $options) {
     parent::__construct(new QueryBuilder\MySql());
@@ -35,6 +35,9 @@ class MySqlI extends Db {
    */
   public function connect() {
     $mysqli = mysqli_init();
+    if (!$mysqli) {
+      throw new Error("Error in mysqli_init().");
+    }
     $options = $this->options + array_fill_keys([
       "host",
       "user",
@@ -78,7 +81,7 @@ class MySqlI extends Db {
 
   /**
    * @param Query $query
-   * @return array
+   * @return array<int,mixed>
    */
   protected function doQuery(Query $query) {
     $this->doExecute($query);
@@ -155,7 +158,7 @@ class MySqlI extends Db {
   }
 
   /**
-   * @return int
+   * @return int|string
    */
   public function lastAffectedRowsCount() {
     if (!$this->last_statement) {

@@ -32,7 +32,7 @@ class Noop extends Db {
 
   /**
    * @param Query $query
-   * @return array
+   * @return array<int,mixed>
    */
   protected function doQuery(Query $query) {
     return [];

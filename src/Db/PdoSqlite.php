@@ -3,7 +3,7 @@ namespace Coroq\Db;
 
 class PdoSqlite extends Pdo {
   /**
-   * @param array $options
+   * @param array<string,mixed> $options
    */
   public function __construct(array $options) {
     parent::__construct($options, new QueryBuilder());

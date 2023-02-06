@@ -55,7 +55,7 @@ class QueryBuilder {
   }
 
   /**
-   * @param array $query
+   * @param array<string,mixed> $query
    * @return Query
    */
   public function makeSelectStatement(array $query) {
@@ -78,7 +78,7 @@ class QueryBuilder {
   }
 
   /**
-   * @param array $query
+   * @param array<string,mixed> $query
    * @return Query
    */
   public function makeInsertStatement(array $query) {
@@ -103,7 +103,7 @@ class QueryBuilder {
   }
 
   /**
-   * @param array $query
+   * @param array<string,mixed> $query
    * @return Query
    */
   public function makeInsertMultipleStatement(array $query) {
@@ -126,7 +126,7 @@ class QueryBuilder {
   }
 
   /**
-   * @param array $query
+   * @param array<string,mixed> $query
    * @return Query
    */
   public function makeUpdateStatement(array $query) {
@@ -144,7 +144,7 @@ class QueryBuilder {
   }
 
   /**
-   * @param array $query
+   * @param array<string,mixed> $query
    * @return Query
    */
   public function makeDeleteStatement(array $query) {
@@ -213,18 +213,35 @@ class QueryBuilder {
     return Query::toList($column);
   }
 
+  /**
+   * @param Query|string $name
+   * @return Query
+   */
   public function makeFromClause($name) {
     return $this->makePrefixedNameClauseHelper("from", $name);
   }
 
+  /**
+   * @param Query|string $name
+   * @return Query
+   */
   public function makeAliasClause($name) {
     return $this->makePrefixedNameClauseHelper("as", $name);
   }
 
+  /**
+   * @param Query|string $name
+   * @return Query
+   */
   public function makeIntoClause($name) {
     return $this->makePrefixedNameClauseHelper("into", $name);
   }
 
+  /**
+   * @param Query|string $prefix
+   * @param Query|string $name
+   * @return Query
+   */
   public function makePrefixedNameClauseHelper($prefix, $name) {
     if (!($name instanceof Query)) {
       $name = $this->makeNameClause($name);
@@ -276,6 +293,10 @@ class QueryBuilder {
     return (new Query("set"))->append(Query::toList($sets));
   }
 
+  /**
+   * @param Query|array<mixed> $join
+   * @return Query
+   */
   public function makeJoinClause($join) {
     if ($join instanceof Query) {
       return $join;
@@ -289,7 +310,7 @@ class QueryBuilder {
         return $this->makeJoinClause($join);
       }, $join);
       $joins = array_filter($joins, function($join) {
-        return $join && !$join->isEmpty();
+        return !$join->isEmpty();
       });
       return Query::join($joins);
     }
@@ -307,6 +328,10 @@ class QueryBuilder {
       ->append($this->makeOnClause($join["where"]));
   }
 
+  /**
+   * @param array<mixed>|Query|string $conditions
+   * @return Query
+   */
   public function makeWhereClause($conditions) {
     $q = $this->makeConditionClause($conditions);
     if ($q->isEmpty()) {
@@ -315,6 +340,10 @@ class QueryBuilder {
     return (new Query("where"))->append($q);
   }
 
+  /**
+   * @param array<mixed>|Query|string $conditions
+   * @return Query
+   */
   public function makeOnClause($conditions) {
     $q = $this->makeConditionClause($conditions);
     if ($q->isEmpty()) {
@@ -324,7 +353,7 @@ class QueryBuilder {
   }
 
   /**
-   * @param array|Query|string $where
+   * @param array<mixed>|Query|string $where
    * @return Query
    */
   public function makeConditionClause($where) {
@@ -363,26 +392,46 @@ class QueryBuilder {
     return Query::join($where, " and ");
   }
 
+  /**
+   * @param array<Query|string>|Query|string|null $group
+   * @return Query
+   */
   public function makeGroupByClause($group) {
+    if ($group === null || $group === "" || $group === []) {
+      return new Query();
+    }
+    if (!is_array($group)) {
+      $group = [$group];
+    }
     $group = array_map(function($g) {
       return ($g instanceof Query) ? $g : $this->makeNameClause($g);
-    }, (array)$group);
+    }, $group);
     $group = array_filter($group, function($g) {
       return !$g->isEmpty();
     });
     if (!$group) {
-      return null;
+      return new Query();
     }
     return (new Query("group by"))->append(Query::toList($group));
   }
 
+  /**
+   * @param array<Query|string>|Query|string|null $order
+   * @return Query
+   */
   public function makeOrderByClause($order) {
     static $dirs = ["+" => "asc", "-" => "desc"];
+    if ($order === null || $order === "" || $order === []) {
+      return new Query();
+    }
+    if (!is_array($order)) {
+      $order = [$order];
+    }
     $order = array_map(function($o) use ($dirs) {
       if ($o instanceof Query) {
         return $o;
       }
-      $o = trim($o);
+      $o = trim("$o");
       if ($o == "") {
         return new Query();
       }
@@ -394,16 +443,20 @@ class QueryBuilder {
         $dir = $dirs["+"];
       }
       return $this->makeNameClause($o)->append($dir);
-    }, (array)$order);
+    }, $order);
     $order = array_filter($order, function($o) {
       return !$o->isEmpty();
     });
     if (!$order) {
-      return null;
+      return new Query();
     }
     return (new Query("order by"))->append(Query::toList($order));
   }
 
+  /**
+   * @param Query|int|null $offset
+   * @return ?Query
+   */
   public function makeOffsetClause($offset) {
     if ($offset instanceof Query) {
       if ($offset->isEmpty()) {
@@ -419,6 +472,10 @@ class QueryBuilder {
     return (new Query("offset"))->append($offset);
   }
 
+  /**
+   * @param Query|int|null $limit
+   * @return ?Query
+   */
   public function makeLimitClause($limit) {
     if ($limit instanceof Query) {
       if ($limit->isEmpty()) {

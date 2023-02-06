@@ -2,6 +2,7 @@
 namespace Coroq;
 use Coroq\Db\Query;
 use Coroq\Db\QueryBuilder;
+use Coroq\Db\Transaction;
 
 abstract class Db {
   const FETCH_ALL = "all";
@@ -15,7 +16,7 @@ abstract class Db {
   private $transactionStack = 0;
   /** @var bool */
   private $rollbacked = false;
-  /** @var array<array> */
+  /** @var array<array<string,mixed>> */
   private $log = [];
   /** @var bool */
   private $logging_enabled = false;
@@ -29,11 +30,17 @@ abstract class Db {
    */
   abstract public function connect();
 
+  /**
+   * @return Transaction
+   */
   public function transaction() {
     $this->begin();
-    return new Db\Transaction($this);
+    return new Transaction($this);
   }
 
+  /**
+   * @return void
+   */
   public function begin() {
     if ($this->transactionStack == 0) {
       $this->executeDirectly("begin");
@@ -41,15 +48,24 @@ abstract class Db {
     ++$this->transactionStack;
   }
 
+  /**
+   * @return void
+   */
   public function commit() {
     $this->popTransaction();
   }
 
+  /**
+   * @return void
+   */
   public function rollback() {
     $this->rollbacked = true;
     $this->popTransaction();
   }
 
+  /**
+   * @return void
+   */
   public function popTransaction() {
     --$this->transactionStack;
     if ($this->transactionStack < 0) {
@@ -67,16 +83,28 @@ abstract class Db {
     $this->executeDirectly("commit");
   }
 
+  /**
+   * @param string $name
+   * @return void
+   */
   public function savepoint($name) {
     $name = $this->query_builder->quoteName($name);
     $this->executeDirectly("savepoint $name");
   }
 
+  /**
+   * @param string $name
+   * @return void
+   */
   public function releaseSavepoint($name) {
     $name = $this->query_builder->quoteName($name);
     $this->executeDirectly("release savepoint $name");
   }
 
+  /**
+   * @param string $name
+   * @return void
+   */
   public function rollbackTo($name) {
     $name = $this->query_builder->quoteName($name);
     $this->executeDirectly("rollback to savepoint $name");
@@ -173,12 +201,13 @@ abstract class Db {
   /**
    * Query and fetch the rows
    * @param Query $query
-   * @return array
+   * @return array<int,mixed>
    */
   abstract protected function doQuery(Query $query);
 
   /**
-   * @param Query|array $query
+   * @param Query|array<string,mixed> $query
+   * @param string $fetch
    * @return mixed
    */
   public function select($query, $fetch = self::FETCH_ALL) {
@@ -192,7 +221,7 @@ abstract class Db {
   }
 
   /**
-   * @param Query|array $query
+   * @param Query|array<string,mixed> $query
    * @return void
    */
   public function insert($query) {
@@ -236,6 +265,7 @@ abstract class Db {
   }
 
   /**
+   * @param string $name
    * @return mixed
    */
   abstract public function lastInsertId($name = null);
@@ -260,6 +290,9 @@ abstract class Db {
     return $this->log;
   }
 
+  /**
+   * @return string
+   */
   public function getFormattedLog() {
     $formatValue = function($value) {
       if ($value === null) {

@@ -5,7 +5,7 @@ use Coroq\Db;
 abstract class Pdo extends Db {
   /** @var \PDO|null */
   private $pdo;
-  /** @var array */
+  /** @var array<string,mixed> */
   private $options;
   /** @var array<\PDOStatement> */
   private $statements = [];
@@ -13,7 +13,7 @@ abstract class Pdo extends Db {
   private $last_statement;
 
   /**
-   * @param array $options
+   * @param array<string,mixed> $options
    */
   public function __construct(array $options, QueryBuilder $query_builder) {
     parent::__construct($query_builder);
@@ -50,7 +50,7 @@ abstract class Pdo extends Db {
 
   /**
    * @param Query $query
-   * @return array
+   * @return array<int,mixed>
    */
   protected function doQuery(Query $query) {
     try {

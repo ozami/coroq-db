@@ -36,9 +36,9 @@ abstract class Pdo extends Db {
   public function connect() {
     try {
       $this->pdo = new \PDO(
-        @$this->options["dsn"],
-        @$this->options["user"],
-        @$this->options["password"],
+        $this->options["dsn"],
+        isset($this->options["user"]) ? $this->options["user"] : null,
+        isset($this->options["password"]) ? $this->options["password"] : null,
         $this->options
       );
       $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);

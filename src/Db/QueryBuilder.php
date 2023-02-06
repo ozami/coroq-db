@@ -59,19 +59,22 @@ class QueryBuilder {
    * @return Query
    */
   public function makeSelectStatement(array $query) {
-    $distinct = @$query["distinct"] ? "distinct" : null;
+    $query += array_fill_keys([
+      "distinct", "option", "column", "table", "alias", "join",
+      "where", "group", "order", "limit", "offset",
+    ], null);
     return (new Query("select"))
-      ->append($distinct)
-      ->append($this->makeSelectOptionClause(@$query["option"]))
-      ->append($this->makeColumnClause(@$query["column"] ?: "*"))
-      ->append($this->makeFromClause(@$query["table"]))
-      ->append($this->makeAliasClause(@$query["alias"]))
-      ->append($this->makeJoinClause(@$query["join"]))
-      ->append($this->makeWhereClause(@$query["where"]))
-      ->append($this->makeGroupByClause(@$query["group"]))
-      ->append($this->makeOrderByClause(@$query["order"]))
-      ->append($this->makeLimitClause(@$query["limit"]))
-      ->append($this->makeOffsetClause(@$query["offset"]));
+      ->append($query["distinct"] ? "distinct" : null)
+      ->append($this->makeSelectOptionClause($query["option"]))
+      ->append($this->makeColumnClause($query["column"] ?: "*"))
+      ->append($this->makeFromClause($query["table"]))
+      ->append($this->makeAliasClause($query["alias"]))
+      ->append($this->makeJoinClause($query["join"]))
+      ->append($this->makeWhereClause($query["where"]))
+      ->append($this->makeGroupByClause($query["group"]))
+      ->append($this->makeOrderByClause($query["order"]))
+      ->append($this->makeLimitClause($query["limit"]))
+      ->append($this->makeOffsetClause($query["offset"]));
   }
 
   /**
@@ -91,7 +94,7 @@ class QueryBuilder {
       }
     }
     $q = (new Query("insert"))
-      ->append($this->makeIntoClause(@$query["table"]));
+      ->append($this->makeIntoClause(isset($query["table"]) ? $query["table"] : null));
     $names = array_map(function($name) {
       return $this->makeNameClause($name);
     }, $query["column"]);
@@ -114,7 +117,7 @@ class QueryBuilder {
       return $values;
     }, $query["data"]);
     $q = (new Query("insert"))
-      ->append($this->makeIntoClause(@$query["table"]));
+      ->append($this->makeIntoClause(isset($query["table"]) ? $query["table"] : null));
     $names = array_map(function($name) {
       return $this->makeNameClause($name);
     }, $query["column"]);
@@ -127,16 +130,17 @@ class QueryBuilder {
    * @return Query
    */
   public function makeUpdateStatement(array $query) {
-    if (isset($query["column"])) {
-      if (!is_array(@$query["data"])) {
+    $query += array_fill_keys(["column", "data", "table", "where"], null);
+    if ($query["column"]) {
+      if (!is_array($query["data"])) {
         throw new \LogicException();
       }
       $query["data"] = $this->arrayPick($query["data"], $query["column"]);
     }
     return (new Query("update"))
-      ->append($this->makeNameClause(@$query["table"]))
-      ->append($this->makeSetClause(@$query["data"]))
-      ->append($this->makeWhereClause(@$query["where"]));
+      ->append($this->makeNameClause($query["table"]))
+      ->append($this->makeSetClause($query["data"]))
+      ->append($this->makeWhereClause($query["where"]));
   }
 
   /**
@@ -144,9 +148,10 @@ class QueryBuilder {
    * @return Query
    */
   public function makeDeleteStatement(array $query) {
+    $query += array_fill_keys(["table", "where"], null);
     return (new Query("delete"))
-      ->append($this->makeFromClause(@$query["table"]))
-      ->append($this->makeWhereClause(@$query["where"]));
+      ->append($this->makeFromClause($query["table"]))
+      ->append($this->makeWhereClause($query["where"]));
   }
 
   /**
@@ -288,17 +293,18 @@ class QueryBuilder {
       });
       return Query::join($joins);
     }
+    $join += array_fill_keys(["type", "table", "alias", "where"], null);
     // single join clause
     static $types = ["inner", "left outer", "right outer", "full outer", "cross"];
-    if (!in_array(@$join["type"], $types)) {
+    if (!in_array($join["type"], $types)) {
       throw new \LogicException();
     }
     return (new Query())
       ->append($join["type"])
       ->append("join")
-      ->append($this->makeNameClause(@$join["table"]))
-      ->append($this->makeAliasClause(@$join["alias"]))
-      ->append($this->makeOnClause(@$join["where"]));
+      ->append($this->makeNameClause($join["table"]))
+      ->append($this->makeAliasClause($join["alias"]))
+      ->append($this->makeOnClause($join["where"]));
   }
 
   public function makeWhereClause($conditions) {
@@ -337,7 +343,8 @@ class QueryBuilder {
       if (!preg_match("/^(([a-zA-Z0-9_]+[.])?[a-zA-Z0-9_]+)(:(!?[a-z_]+))?$/u", $name, $matched)) {
         throw new \LogicException();
       }
-      @list (, $name, , , $operator) = $matched;
+      $name = $matched[1];
+      $operator = isset($matched[4]) ? $matched[4] : null;
       $name_clause = $this->makeNameClause($name);
       if ($operator == "") {
         $operator = "eq";
@@ -379,7 +386,7 @@ class QueryBuilder {
       if ($o == "") {
         return new Query();
       }
-      $dir = @$dirs[@$o[0]];
+      $dir = isset($dirs[$o[0]]) ? $dirs[$o[0]] : null;
       if ($dir) {
         $o = substr($o, 1);
       }

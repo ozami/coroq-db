@@ -152,7 +152,7 @@ abstract class Db {
       return $rows;
     }
     if ($fetch == self::FETCH_ROW) {
-      return @$rows[0];
+      return $rows ? $rows[0] : null;
     }
     if ($fetch == self::FETCH_ONE) {
       if (!$rows) {
@@ -280,7 +280,8 @@ abstract class Db {
       $query = "";
       $arguments = array_values($log_entry["query"]->params);
       foreach (explode("?", $log_entry["query"]->text) as $position => $part) {
-        $query .= $part . $formatValue(@$arguments[$position]->value);
+        $value = isset($arguments[$position]) ? $arguments[$position]->value : null;
+        $query .= $part . $formatValue($value);
       }
       $line_number = $index + 1;
       $formatted[] = join(" ", [

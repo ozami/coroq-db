@@ -35,24 +35,40 @@ class MySqlI extends Db {
    */
   public function connect() {
     $mysqli = mysqli_init();
-    $ssl_options = @$this->options["ssl"];
-    if ($ssl_options) {
+    $options = $this->options + array_fill_keys([
+      "host",
+      "user",
+      "password",
+      "database",
+      "port",
+      "socket",
+      "flags",
+      "ssl",
+    ], null);
+    if ($options["ssl"]) {
+      $ssl_options = $options["ssl"] + array_fill_keys([
+        "key",
+        "certificate",
+        "ca_certificate",
+        "ca_certificate_directory",
+        "cipher",
+      ], null);
       $mysqli->ssl_set(
-        @$ssl_options["key"],
-        @$ssl_options["certificate"],
-        @$ssl_options["ca_certificate"],
-        @$ssl_options["ca_certificate_directory"],
-        @$ssl_options["cipher"]
+        $ssl_options["key"],
+        $ssl_options["certificate"],
+        $ssl_options["ca_certificate"],
+        $ssl_options["ca_certificate_directory"],
+        $ssl_options["cipher"]
       );
     }
     $connected = $mysqli->real_connect(
-      @$this->options["host"],
-      @$this->options["user"],
-      @$this->options["password"],
-      @$this->options["database"],
-      @$this->options["port"],
-      @$this->options["socket"],
-      @$this->options["flags"]
+      $options["host"],
+      $options["user"],
+      $options["password"],
+      $options["database"],
+      $options["port"],
+      $options["socket"],
+      $options["flags"]
     );
     if (!$connected) {
       throw new Error($mysqli->connect_error, $mysqli->connect_errno);
@@ -79,8 +95,10 @@ class MySqlI extends Db {
    */
   protected function doExecute(Query $query) {
     $mysqli = $this->mysqli();
-    $statement = @$this->statements[$query->text];
-    if (!$statement) {
+    if (isset($this->statements[$query->text])) {
+      $statement = $this->statements[$query->text];
+    }
+    else {
       $this->query_builder->checkSqlInjection($query);
       $statement = $mysqli->prepare($query->text);
       if ($statement === false) {
@@ -95,11 +113,10 @@ class MySqlI extends Db {
         QueryParam::TYPE_STRING => "s",
       ];
       foreach ($query->params as $param) {
-        $param_type = @$param_type_map[$param->type];
-        if ($param_type === null) {
+        if (!isset($param_type_map[$param->type])) {
           throw new \LogicException("Unknown parameter type {$param->type}");
         }
-        $param_types .= $param_type;
+        $param_types .= $param_type_map[$param->type];
       }
       $bind_param_arguments = [$param_types];
       foreach ($query->params as $index => $not_used) {

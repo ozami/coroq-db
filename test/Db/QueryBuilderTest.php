@@ -80,6 +80,140 @@ class QueryBuilderTest extends PHPUnit_Framework_TestCase {
     }
   }
 
+  public function testMakeOrderByClauseFromNull() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeOrderByClause(null)
+    );
+  }
+
+  public function testMakeOrderByClauseFromEmptyString() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeOrderByClause("")
+    );
+  }
+
+  public function testMakeOrderByClauseFromWhiteSpaceString() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeOrderByClause(" ")
+    );
+  }
+
+  public function testMakeOrderByClauseFromStringWithExplicitAscendingDirection() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('order by "col1" asc'),
+      $query_builder->makeOrderByClause("+col1")
+    );
+  }
+
+  public function testMakeOrderByClauseFromValidStringWithExplicitDescendingDirection() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('order by "col1" desc'),
+      $query_builder->makeOrderByClause("-col1")
+    );
+  }
+
+  public function testMakeOrderByClauseFromValidStringWithImplicitDirection() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('order by "col1" asc'),
+      $query_builder->makeOrderByClause("col1")
+    );
+  }
+
+  public function testMakeOrderByClauseFromQuery() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('order by col1'),
+      $query_builder->makeOrderByClause(new Query("col1"))
+    );
+  }
+
+  public function testMakeOrderByClauseFromEmptyArray() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeOrderByClause([])
+    );
+  }
+
+  public function testMakeOrderByClauseFromArrayOfSingleString() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('order by "col1" asc'),
+      $query_builder->makeOrderByClause(['col1'])
+    );
+  }
+
+  public function testMakeOrderByClauseFromArrayOfStrings() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('order by "col1" asc, "col2" asc'),
+      $query_builder->makeOrderByClause(['col1', 'col2'])
+    );
+  }
+
+  public function testMakeGroupByClauseFromNull() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeGroupByClause(null)
+    );
+  }
+
+  public function testMakeGroupByClauseFromEmptyString() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeGroupByClause("")
+    );
+  }
+
+  public function testMakeGroupByClauseFromString() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('group by "col1"'),
+      $query_builder->makeGroupByClause("col1")
+    );
+  }
+
+  public function testMakeGroupByClauseFromWhiteSpace() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query(),
+      $query_builder->makeGroupByClause(" ")
+    );
+  }
+
+  public function testMakeGroupByClauseFromQuery() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('group by col1'),
+      $query_builder->makeGroupByClause(new Query("col1"))
+    );
+  }
+
+  public function testMakeGroupByClauseFromEmptyArray() {
+    $query_builder = new QueryBuilder();
+    $this->assertEquals(
+      new Query('group by "col1", col2'),
+      $query_builder->makeGroupByClause([
+        null,
+        "",
+        " ",
+        "col1",
+        new Query("col2"),
+      ])
+    );
+  }
+
   /**
    * @covers Coroq\Db\QueryBuilder::checkSqlInjection
    */

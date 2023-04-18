@@ -1,6 +1,7 @@
 <?php
 namespace Coroq\Db;
 use Coroq\Db;
+use PDOException;
 
 abstract class Pdo extends Db {
   /** @var \PDO|null */
@@ -44,7 +45,7 @@ abstract class Pdo extends Db {
       $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
     catch (\PDOException $exception) {
-      throw new Error($exception);
+      throw $this->createErrorFromPdoException($exception);
     }
   }
 
@@ -58,7 +59,7 @@ abstract class Pdo extends Db {
       return $this->last_statement->fetchAll(\PDO::FETCH_ASSOC);
     }
     catch (\PDOException $exception) {
-      throw new Error($exception);
+      throw $this->createErrorFromPdoException($exception);
     }
   }
 
@@ -82,7 +83,7 @@ abstract class Pdo extends Db {
       $this->last_statement = $statement;
     }
     catch (\PDOException $exception) {
-      throw new Error($exception);
+      throw $this->createErrorFromPdoException($exception);
     }
   }
 
@@ -95,7 +96,7 @@ abstract class Pdo extends Db {
       $this->pdo()->exec($query);
     }
     catch (\PDOException $exception) {
-      throw new Error($exception);
+      throw $this->createErrorFromPdoException($exception);
     }
   }
 
@@ -114,5 +115,9 @@ abstract class Pdo extends Db {
       throw new \LogicException();
     }
     return $this->last_statement->rowCount();
+  }
+
+  protected function createErrorFromPdoException(PDOException $pdoException) {
+    return new Error($pdoException);
   }
 }

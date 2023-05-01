@@ -1,6 +1,7 @@
 <?php
 namespace Coroq\Db;
 use Coroq\Db;
+use Coroq\Db\Error\UniqueViolationError;
 use PDOException;
 
 abstract class Pdo extends Db {
@@ -118,6 +119,16 @@ abstract class Pdo extends Db {
   }
 
   protected function createErrorFromPdoException(PDOException $pdoException) {
-    return new Error($pdoException);
+    $sqlState = $pdoException->errorInfo[0];
+    $class = Error::class;
+    if ($sqlState == 23505) {
+      $class = UniqueViolationError::class;
+    }
+    return new $class(
+      $pdoException->getMessage(),
+      0,
+      $pdoException,
+      $sqlState
+    );
   }
 }

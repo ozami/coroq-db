@@ -1,15 +1,22 @@
 <?php
 namespace Coroq\Db;
 
+use Throwable;
+
 class Error extends \RuntimeException {
-  public function __construct() {
-    $arguments = func_get_args();
-    if (isset($arguments[0]) && $arguments[0] instanceof \RuntimeException) {
-      parent::__construct($arguments[0]->getMessage(), $arguments[0]->getCode(), $arguments[0]);
-    }
-    else {
-      $arguments += ["", 0, null];
-      parent::__construct($arguments[0], $arguments[1], $arguments[2]);
-    }
+  /** @var ?string */
+  protected $sqlState;
+
+  public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null, ?string $sqlState = null) {
+    parent::__construct($message = "", $code, $previous);
+    $this->setSqlState($sqlState);
+  }
+
+  public function getSqlState(): ?string {
+    return $this->sqlState;
+  }
+
+  public function setSqlState(?string $sqlState): void {
+    $this->sqlState = $sqlState;
   }
 }

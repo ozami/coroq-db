@@ -37,11 +37,4 @@ class PdoPgSql extends Pdo {
   public function copyFromArray($table, array $rows, $delimiter = "\t", $null_as = "\\\\N") {
     $this->pdo()->pgsqlCopyFromArray($table, $rows, $delimiter, $null_as);
   }
-
-  protected function createErrorFromPdoException(PDOException $pdoException) {
-    if ($pdoException->getCode() == 23505) {
-      return new UniqueViolationError($pdoException);
-    }
-    return parent::createErrorFromPdoException($pdoException);
-  }
 }

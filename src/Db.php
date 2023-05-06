@@ -25,6 +25,10 @@ abstract class Db {
     $this->query_builder = $query_builder;
   }
 
+  public function getQueryBuilder(): QueryBuilder {
+    return $this->query_builder;
+  }
+
   /**
    * @return void
    */

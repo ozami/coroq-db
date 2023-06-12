@@ -32,7 +32,9 @@ abstract class Db {
   /**
    * @return void
    */
-  abstract public function connect();
+  public abstract function connect();
+
+  public abstract function disconnect();
 
   /**
    * @return Transaction

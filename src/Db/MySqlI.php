@@ -20,6 +20,10 @@ class MySqlI extends Db {
     $this->options = $options;
   }
 
+  public function __destruct() {
+    $this->disconnect();
+  }
+
   /**
    * @return \mysqli
    */
@@ -77,6 +81,15 @@ class MySqlI extends Db {
       throw new Error($mysqli->connect_error, $mysqli->connect_errno);
     }
     $this->mysqli = $mysqli;
+  }
+
+  public function disconnect() {
+    $this->statements = [];
+    $this->last_statement = null;
+    if ($this->mysqli()) {
+      mysqli_close($this->mysqli);
+      $this->mysqli = null;
+    }
   }
 
   /**

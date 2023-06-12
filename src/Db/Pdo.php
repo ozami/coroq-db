@@ -50,6 +50,12 @@ abstract class Pdo extends Db {
     }
   }
 
+  public function disconnect() {
+    $this->last_statement = null;
+    $this->statements = [];
+    $this->pdo = null;
+  }
+
   /**
    * @param Query $query
    * @return array<int,mixed>

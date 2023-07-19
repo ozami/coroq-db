@@ -61,7 +61,7 @@ class QueryBuilder {
   public function makeSelectStatement(array $query) {
     $query += array_fill_keys([
       "distinct", "option", "column", "table", "alias", "join",
-      "where", "group", "order", "limit", "offset",
+      "where", "group", "order", "limit", "offset", "for",
     ], null);
     return (new Query("select"))
       ->append($query["distinct"] ? "distinct" : null)
@@ -74,7 +74,8 @@ class QueryBuilder {
       ->append($this->makeGroupByClause($query["group"]))
       ->append($this->makeOrderByClause($query["order"]))
       ->append($this->makeLimitClause($query["limit"]))
-      ->append($this->makeOffsetClause($query["offset"]));
+      ->append($this->makeOffsetClause($query["offset"]))
+      ->append($this->makeSelectForClause($query["for"]));
   }
 
   /**
@@ -492,6 +493,18 @@ class QueryBuilder {
   }
 
   /**
+   * @param Query|string|null $for
+   * @return ?Query
+   */
+  public function makeSelectForClause($for): ?Query {
+    $for = new Query($for);
+    if ($for->isEmpty()) {
+      return null;
+    }
+    return (new Query("for"))->append($for);
+  }
+
+  /**
    * @param Query $name
    * @param string $op
    * @param mixed $value
@@ -537,5 +550,4 @@ class QueryBuilder {
   public function arrayPick(array $data, array $keys) {
     return array_intersect_key($data, array_fill_keys($keys, null));
   }
-
 }

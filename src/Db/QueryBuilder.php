@@ -7,7 +7,7 @@ class QueryBuilder {
    * @return string
    */
   public function quoteName($name) {
-    $name = trim($name);
+    $name = trim("$name");
     if ($name == "") {
       return $name;
     }

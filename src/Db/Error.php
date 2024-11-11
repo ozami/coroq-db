@@ -8,7 +8,7 @@ class Error extends \RuntimeException {
   protected $sqlState;
 
   public function __construct(string $message = "", int $code = 0, ?Throwable $previous = null, ?string $sqlState = null) {
-    parent::__construct($message = "", $code, $previous);
+    parent::__construct($message, $code, $previous);
     $this->setSqlState($sqlState);
   }
 
